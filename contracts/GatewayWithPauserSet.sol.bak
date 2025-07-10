@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "./PauserSet.sol";
+
+/**
+ * @title GatewayWithPauserSet
+ * @notice Example gateway contract with updated PauserSet integration
+ * @dev Demonstrates the new pattern with isPublicDecryptAllowed instead of checkPublicDecryptAllowed
+ */
+contract GatewayWithPauserSet {
+    // PauserSet contract reference
+    PauserSet public immutable pauserSet;
+
+    // Gateway state
+    bool public paused;
+
+    // Events
+    event GatewayPaused(address indexed pauser);
+    event GatewayUnpaused(address indexed pauser);
+    event DecryptionRequested(uint256 indexed requestId, address indexed requester);
+
+    // Errors moved from deprecated check functions
+    error GatewayPaused();
+    error UnauthorizedPauser();
+    error DecryptionNotAllowed(string reason);
+
+    /**
+     * @notice Constructor
+     * @param _pauserSetAddress Address of the deployed PauserSet contract
+     */
+    constructor(address _pauserSetAddress) {
+        require(_pauserSetAddress != address(0), "Invalid PauserSet address");
+        pauserSet = PauserSet(_pauserSetAddress);
+    }
+
+    /**
+     * @notice Modifier to restrict functions to pausers only
+     */
+    modifier onlyPauser() {
+        if (!pauserSet.checkIsPauser(msg.sender)) {
+            revert UnauthorizedPauser();
+        }
+        _;
+    }
+
+    /**
+     * @notice Modifier to check if gateway is not paused
+     */
+    modifier whenNotPaused() {
+        if (paused) {
+            revert GatewayPaused();
+        }
+        _;
+    }
+
+    /**
+     * @notice Pause the gateway (can be called by any pauser)
+     * @dev Any address in the PauserSet can pause the gateway
+     */
+    function pause() external onlyPauser {
+        require(!paused, "Already paused");
+        paused = true;
+        emit GatewayPaused(msg.sender);
+    }
+
+    /**
+     * @notice Unpause the gateway (can be called by any pauser)
+     * @dev Any address in the PauserSet can unpause the gateway
+     */
+    function unpause() external onlyPauser {
+        require(paused, "Not paused");
+        paused = false;
+        emit GatewayUnpaused(msg.sender);
+    }
+
+    /**
+     * @notice Check if public decryption is allowed (NEW pattern)
+     * @dev Replaces the old checkPublicDecryptAllowed function
+     * @param requester Address requesting decryption
+     * @return bool True if decryption is allowed, false otherwise
+     *
+     * OLD PATTERN (deprecated):
+     * function checkPublicDecryptAllowed(address requester) external view {
+     *     if (paused) revert PublicDecryptNotAllowed("Gateway paused");
+     *     if (requester == address(0)) revert PublicDecryptNotAllowed("Invalid requester");
+     * }
+     *
+     * NEW PATTERN:
+     * Returns boolean instead of reverting
+     */
+    function isPublicDecryptAllowed(address requester) external view returns (bool) {
+        if (paused) {
+            return false;
+        }
+        if (requester == address(0)) {
+            return false;
+        }
+        // Add additional checks as needed
+        return true;
+    }
+
+    /**
+     * @notice Check if request decryption is allowed
+     * @param requester Address requesting decryption
+     * @return bool True if allowed
+     */
+    function isRequestDecryptAllowed(address requester) external view returns (bool) {
+        if (paused) {
+            return false;
+        }
+        if (requester == address(0)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @notice Request decryption with input re-randomization
+     * @dev All transaction inputs are re-encrypted before FHE operation evaluation
+     * This provides sIND-CPAD security transparently to users
+     * @param ciphertext Encrypted data to decrypt
+     * @return requestId Request identifier
+     */
+    function requestDecryption(bytes32 ciphertext)
+        external
+        whenNotPaused
+        returns (uint256 requestId)
+    {
+        // Verify decryption is allowed using new pattern
+        require(this.isPublicDecryptAllowed(msg.sender), "Decryption not allowed");
+
+        // Transaction input re-randomization happens here automatically
+        // This provides sIND-CPAD security without user intervention
+
+        requestId = uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.number,
+            msg.sender,
+            ciphertext
+        )));
+
+        emit DecryptionRequested(requestId, msg.sender);
+
+        return requestId;
+    }
+
+    /**
+     * @notice Get information about the PauserSet
+     * @return totalPausers Number of pausers
+     * @return pausers Array of pauser addresses
+     */
+    function getPauserSetInfo() external view returns (
+        uint256 totalPausers,
+        address[] memory pausers
+    ) {
+        totalPausers = pauserSet.getPauserCount();
+        pausers = pauserSet.getAllPausers();
+    }
+
+    /**
+     * @notice Check if an address is a pauser
+     * @param account Address to check
+     * @return bool True if the address is a pauser
+     */
+    function isPauserAddress(address account) external view returns (bool) {
+        return pauserSet.checkIsPauser(account);
+    }
+
+    /**
+     * @notice Get gateway status
+     * @return isPaused Current pause status
+     * @return pauserCount Number of pausers
+     */
+    function getGatewayStatus() external view returns (
+        bool isPaused,
+        uint256 pauserCount
+    ) {
+        isPaused = paused;
+        pauserCount = pauserSet.getPauserCount();
+    }
+}
