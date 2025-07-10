@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+/**
+ * @title PauserSet
+ * @notice Immutable contract for managing pauser addresses
+ * @dev This contract stores multiple pauser addresses that can pause Host and Gateway contracts
+ * Used for managing KMS nodes and coprocessors
+ */
+contract PauserSet {
+    // Array of pauser addresses
+    address[] public pausers;
+
+    // Mapping for O(1) lookup of pauser status
+    mapping(address => bool) public isPauser;
+
+    // Events
+    event PauserAdded(address indexed pauser, uint256 index);
+    event PauserSetInitialized(uint256 totalPausers);
+
+    /**
+     * @notice Constructor initializes the pauser set (immutable)
+     * @param _pausers Array of pauser addresses to be added
+     * @dev Once deployed, the pauser set cannot be modified (immutable)
+     */
+    constructor(address[] memory _pausers) {
+        require(_pausers.length > 0, "PauserSet: At least one pauser required");
+
+        for (uint256 i = 0; i < _pausers.length; i++) {
+            address pauser = _pausers[i];
+
+            require(pauser != address(0), "PauserSet: Zero address not allowed");
+            require(!isPauser[pauser], "PauserSet: Duplicate pauser address");
+
+            pausers.push(pauser);
+            isPauser[pauser] = true;
+
+            emit PauserAdded(pauser, i);
+        }
+
+        emit PauserSetInitialized(pausers.length);
+    }
+
+    /**
+     * @notice Check if an address is a pauser
+     * @param account Address to check
+     * @return bool True if the address is a pauser
+     */
+    function checkIsPauser(address account) external view returns (bool) {
+        return isPauser[account];
+    }
+
+    /**
+     * @notice Get the total number of pausers
+     * @return uint256 Total number of pausers
+     */
+    function getPauserCount() external view returns (uint256) {
+        return pausers.length;
+    }
+
+    /**
+     * @notice Get pauser address at a specific index
+     * @param index Index of the pauser
+     * @return address Pauser address at the given index
+     */
+    function getPauserAtIndex(uint256 index) external view returns (address) {
+        require(index < pausers.length, "PauserSet: Index out of bounds");
+        return pausers[index];
+    }
+
+    /**
+     * @notice Get all pauser addresses
+     * @return address[] Array of all pauser addresses
+     */
+    function getAllPausers() external view returns (address[] memory) {
+        return pausers;
+    }
+}
