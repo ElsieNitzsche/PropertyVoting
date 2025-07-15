@@ -1,0 +1,43 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "GasOptimized",
+  "sourceName": "contracts/GasOptimized.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "size",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxSize",
+          "type": "uint256"
+        }
+      ],
+      "name": "BatchSizeTooLarge",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "available",
+          "type": "uint256"
+        }
+      ],
+      "name": "GasLimitExceeded",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x60556032600b8282823980515f1a607314602657634e487b7160e01b5f525f60045260245ffd5b305f52607381538281f3fe730000000000000000000000000000000000000000301460806040525f80fdfea26469706673582212201b162922d6a774f010efc9559b39fde64cdf55b655c10f15a34a19359026bfc064736f6c63430008180033",
+  "deployedBytecode": "0x730000000000000000000000000000000000000000301460806040525f80fdfea26469706673582212201b162922d6a774f010efc9559b39fde64cdf55b655c10f15a34a19359026bfc064736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
