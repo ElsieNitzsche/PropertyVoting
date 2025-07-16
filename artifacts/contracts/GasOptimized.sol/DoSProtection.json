@@ -1,0 +1,86 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "DoSProtection",
+  "sourceName": "contracts/GasOptimized.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "remainingTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "CooldownNotElapsed",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "actionsUsed",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxActions",
+          "type": "uint256"
+        }
+      ],
+      "name": "RateLimitExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getRemainingActions",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getResetTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
