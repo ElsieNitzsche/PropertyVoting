@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Check branch name
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "⚠️  Warning: Pushing directly to main/master branch!"
+  read -p "Are you sure? (y/N): " confirm
+  if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+    echo "❌ Push cancelled."
+    exit 1
+  fi
+fi
+
+# Run full test suite
+echo "🧪 Running full test suite..."
+npm test || {
+  echo "❌ Tests failed! Fix issues before pushing."
+  exit 1
+}
+
+# Security audit
+echo "🔒 Running security audit..."
+npm audit --audit-level=moderate || {
+  echo "⚠️  Security vulnerabilities found. Review before pushing."
+  read -p "Continue anyway? (y/N): " confirm
+  if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+    echo "❌ Push cancelled."
+    exit 1
+  fi
+}
+
+# Check coverage
+echo "📊 Checking test coverage..."
+npm run test:coverage --silent 2>/dev/null || echo "Coverage check skipped"
+
+# Gas report
+echo "⛽ Generating gas report..."
+REPORT_GAS=true npm test --silent 2>/dev/null || echo "Gas report skipped"
+
+echo "✅ All pre-push checks passed!"

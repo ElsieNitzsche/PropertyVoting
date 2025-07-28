@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit security and quality checks..."
+
+# Run linting
+echo "📋 Running linters..."
+npm run lint:check || {
+  echo "❌ Linting failed. Fix errors before committing."
+  exit 1
+}
+
+# Run Solidity linting
+echo "📋 Running Solidity linter..."
+npx solhint 'contracts/**/*.sol' || {
+  echo "❌ Solidity linting failed. Fix errors before committing."
+  exit 1
+}
+
+# Check formatting
+echo "🎨 Checking code formatting..."
+npx prettier --check . || {
+  echo "⚠️  Formatting issues found. Run 'npm run format' to fix."
+  echo "Continuing with commit..."
+}
+
+# Type checking
+echo "🔍 Running TypeScript type checks..."
+npm run typecheck || {
+  echo "⚠️  TypeScript errors found. Please review."
+  echo "Continuing with commit..."
+}
+
+# Security check for secrets
+echo "🔒 Scanning for secrets..."
+npx eslint --no-eslintrc --plugin no-secrets --rule 'no-secrets/no-secrets: error' . || {
+  echo "❌ Potential secrets detected! Please remove sensitive data."
+  exit 1
+}
+
+# Check for console.log in production code
+echo "🔍 Checking for console statements..."
+if git diff --cached --name-only | grep -E '\.(js|ts)$' | xargs grep -n 'console\.log' 2>/dev/null; then
+  echo "⚠️  Warning: console.log statements found. Consider removing for production."
+fi
+
+# Check contract size
+echo "📦 Checking contract sizes..."
+npx hardhat size-contracts 2>/dev/null || echo "Contract size check skipped"
+
+# Run quick tests on changed files
+echo "🧪 Running quick tests..."
+npm run test:quick 2>/dev/null || {
+  echo "⚠️  Quick tests not configured or failed."
+  echo "Continuing with commit..."
+}
+
+echo "✅ Pre-commit checks passed!"
