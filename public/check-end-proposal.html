@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End Proposal 诊断工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 2px solid #bee5eb; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .check-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 5px solid #ccc;
+        }
+        .check-item.pass {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .check-item.fail {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .check-item h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .check-item p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 End Proposal 诊断工具</h1>
+
+        <button id="connectBtn">连接钱包</button>
+        <div id="walletInfo" class="info" style="display:none;"></div>
+
+        <button id="diagnoseBtn" style="display:none;">诊断 End Proposal 条件</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="./config.js"></script>
+    <script>
+        let provider, signer, contract, userAddress;
+
+        const CONTRACT_ADDRESS = CONFIG.CONTRACT_ADDRESS;
+        const ABI = [
+            "function propertyManager() view returns (address)",
+            "function currentProposal() view returns (uint16)",
+            "function getCurrentProposalInfo() external view returns (uint16, string, string, bool, uint256, uint256, uint16)",
+            "function getProposalResults(uint16 proposalId) external view returns (bool, uint16, uint16, uint16, bool)",
+            "function isVotingActive(uint16 proposalId) external view returns (bool)",
+            "function endProposal(uint16 proposalId) external"
+        ];
+
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('请安装 MetaMask!');
+                    return;
+                }
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+                document.getElementById('walletInfo').style.display = 'block';
+                document.getElementById('walletInfo').innerHTML = `
+                    ✅ 已连接钱包: <code>${userAddress}</code>
+                `;
+                document.getElementById('diagnoseBtn').style.display = 'block';
+            } catch (error) {
+                alert('连接失败: ' + error.message);
+            }
+        });
+
+        document.getElementById('diagnoseBtn').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">检查中...</div>';
+
+            try {
+                // 获取所有必要信息
+                const manager = await contract.propertyManager();
+                const [proposalId, title, description, isActive, startTime, endTime, totalVotes] =
+                    await contract.getCurrentProposalInfo();
+                const [resultsRevealed] = await contract.getProposalResults(proposalId);
+                const isVotingActive = await contract.isVotingActive(proposalId);
+
+                const currentTime = Math.floor(Date.now() / 1000);
+                const propId = proposalId.toNumber();
+
+                let html = '<h2 style="color: #667eea;">📊 诊断结果</h2>';
+
+                // 基本信息
+                html += '<div class="info">';
+                html += '<h3>基本信息</h3>';
+                html += `<p><strong>Proposal ID:</strong> ${propId}</p>`;
+                html += `<p><strong>标题:</strong> ${title}</p>`;
+                html += `<p><strong>当前用户:</strong> <code>${userAddress}</code></p>`;
+                html += `<p><strong>管理员:</strong> <code>${manager}</code></p>`;
+                html += '</div>';
+
+                // 检查 1: 是否是管理员
+                const isManager = userAddress.toLowerCase() === manager.toLowerCase();
+                html += `<div class="check-item ${isManager ? 'pass' : 'fail'}">`;
+                html += '<h3>检查 1: 管理员权限</h3>';
+                if (isManager) {
+                    html += '<p>✅ 你是管理员，有权限调用 endProposal</p>';
+                } else {
+                    html += '<p>❌ 你不是管理员</p>';
+                    html += `<p><strong>当前用户:</strong> ${userAddress}</p>`;
+                    html += `<p><strong>需要用户:</strong> ${manager}</p>`;
+                    html += '<p><strong>解决方案:</strong> 切换到部署合约的钱包地址</p>';
+                }
+                html += '</div>';
+
+                // 检查 2: Proposal ID 是否有效
+                const hasProposal = propId > 0;
+                html += `<div class="check-item ${hasProposal ? 'pass' : 'fail'}">`;
+                html += '<h3>检查 2: Proposal 是否存在</h3>';
+                if (hasProposal) {
+                    html += `<p>✅ Proposal ID: ${propId}</p>`;
+                } else {
+                    html += '<p>❌ 没有 Proposal</p>';
+                    html += '<p><strong>解决方案:</strong> 需要先创建 Proposal</p>';
+                }
+                html += '</div>';
+
+                // 检查 3: 投票期是否结束
+                const votingEnded = currentTime > endTime.toNumber();
+                html += `<div class="check-item ${votingEnded ? 'pass' : 'fail'}">`;
+                html += '<h3>检查 3: 投票期是否结束</h3>';
+                html += `<p><strong>结束时间:</strong> ${new Date(endTime * 1000).toLocaleString()}</p>`;
+                html += `<p><strong>当前时间:</strong> ${new Date(currentTime * 1000).toLocaleString()}</p>`;
+                if (votingEnded) {
+                    const timePassed = currentTime - endTime.toNumber();
+                    html += `<p>✅ 投票期已结束 (${Math.floor(timePassed / 60)} 分钟前)</p>`;
+                } else {
+                    const timeLeft = endTime.toNumber() - currentTime;
+                    const hours = Math.floor(timeLeft / 3600);
+                    const minutes = Math.floor((timeLeft % 3600) / 60);
+                    html += `<p>❌ 投票期未结束，还剩 ${hours}小时 ${minutes}分钟</p>`;
+                    html += '<p><strong>解决方案:</strong> 等待投票期结束</p>';
+                }
+                html += '</div>';
+
+                // 检查 4: 提案是否激活
+                html += `<div class="check-item ${isActive ? 'pass' : 'fail'}">`;
+                html += '<h3>检查 4: Proposal 是否激活</h3>';
+                if (isActive) {
+                    html += '<p>✅ Proposal 处于激活状态</p>';
+                } else {
+                    html += '<p>❌ Proposal 未激活（可能已经结束）</p>';
+                    html += '<p><strong>说明:</strong> 如果已经结束，无需再次调用 endProposal</p>';
+                }
+                html += '</div>';
+
+                // 检查 5: 结果是否已公布
+                html += `<div class="check-item ${!resultsRevealed ? 'pass' : 'fail'}">`;
+                html += '<h3>检查 5: 结果是否已公布</h3>';
+                if (!resultsRevealed) {
+                    html += '<p>✅ 结果未公布，可以调用 endProposal</p>';
+                } else {
+                    html += '<p>❌ 结果已经公布，无需再次结束</p>';
+                    html += '<p><strong>说明:</strong> Proposal 已经被处理过了</p>';
+                }
+                html += '</div>';
+
+                // 总结
+                const canEnd = isManager && hasProposal && votingEnded && isActive && !resultsRevealed;
+
+                html += '<div style="margin-top: 30px; padding: 20px; border-radius: 10px; ' +
+                        (canEnd ? 'background: #d4edda; border: 2px solid #28a745;' :
+                                  'background: #f8d7da; border: 2px solid #dc3545;') + '">';
+                html += '<h2 style="margin-top: 0;">' + (canEnd ? '✅ 可以结束 Proposal' : '❌ 不能结束 Proposal') + '</h2>';
+
+                if (canEnd) {
+                    html += '<p>所有条件都满足，可以调用 endProposal 函数</p>';
+                    html += '<button onclick="tryEndProposal()" style="background: #28a745;">尝试结束 Proposal</button>';
+                } else {
+                    html += '<p><strong>失败原因:</strong></p><ul style="text-align: left;">';
+                    if (!isManager) html += '<li>你不是管理员</li>';
+                    if (!hasProposal) html += '<li>没有 Proposal</li>';
+                    if (!votingEnded) html += '<li>投票期未结束</li>';
+                    if (!isActive) html += '<li>Proposal 未激活</li>';
+                    if (resultsRevealed) html += '<li>结果已公布</li>';
+                    html += '</ul>';
+                }
+                html += '</div>';
+
+                // 调试信息
+                html += '<div class="code">';
+                html += '<strong>调试信息:</strong><br>';
+                html += `Proposal ID: ${propId}<br>`;
+                html += `Is Active: ${isActive}<br>`;
+                html += `Is Voting Active: ${isVotingActive}<br>`;
+                html += `Results Revealed: ${resultsRevealed}<br>`;
+                html += `Manager: ${manager}<br>`;
+                html += `Current User: ${userAddress}<br>`;
+                html += `Is Manager: ${isManager}<br>`;
+                html += `End Time: ${endTime.toString()} (${new Date(endTime * 1000).toLocaleString()})<br>`;
+                html += `Current Time: ${currentTime} (${new Date(currentTime * 1000).toLocaleString()})<br>`;
+                html += `Voting Ended: ${votingEnded}`;
+                html += '</div>';
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">
+                    <h3>诊断失败</h3>
+                    <p>${error.message}</p>
+                    <pre>${error.stack}</pre>
+                </div>`;
+            }
+        });
+
+        window.tryEndProposal = async function() {
+            if (!contract) return;
+
+            try {
+                const [proposalId] = await contract.getCurrentProposalInfo();
+                const propId = proposalId.toNumber();
+
+                if (confirm(`确认要结束 Proposal ${propId} 吗？`)) {
+                    const tx = await contract.endProposal(propId);
+                    alert('交易已提交: ' + tx.hash);
+                    await tx.wait();
+                    alert('Proposal 已成功结束！');
+                    document.getElementById('diagnoseBtn').click();
+                }
+            } catch (error) {
+                alert('结束失败: ' + error.message);
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+</html>

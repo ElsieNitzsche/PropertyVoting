@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposal Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        h3 { color: #667eea; margin-top: 25px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        button.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid;
+        }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .error { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .info { background: #d1ecf1; border-color: #17a2b8; color: #0c5460; }
+        .loading { background: #e7f3ff; border-color: #2196F3; color: #014361; }
+        .proposal-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .proposal-card.active {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .proposal-card.expired {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .detail {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .badge-active { background: #28a745; color: white; }
+        .badge-expired { background: #ffc107; color: #000; }
+        .badge-ended { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Proposal Manager</h1>
+        <p class="subtitle">Manage active proposals and resolve conflicts</p>
+
+        <button onclick="checkStatus()">🔍 Check Current Status</button>
+        <button onclick="endActiveProposal()" class="danger">🛑 End Active Proposal</button>
+        <button onclick="viewProposal()" class="success">📖 View Proposal Details</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { ethers } from './lib/ethers.esm.min.js';
+
+        const CONTRACT_ADDRESS = '0x6Ece9C29F6E47876bC3809BAC99c175273E184aB';
+        const CONTRACT_ABI = [
+            "function proposals(uint16) view returns (string title, string description, bool isActive, uint256 startTime, uint256 endTime, uint256 votingPeriod, uint16 totalVotes, uint16 yesVotes, uint16 noVotes, bool resultsRevealed)",
+            "function propertyManager() view returns (address)",
+            "function currentProposal() view returns (uint16)",
+            "function endProposal(uint16 proposalId)",
+            "function revealResults(uint16 proposalId)"
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+
+        function showMessage(html, type = 'info') {
+            document.getElementById('result').innerHTML = `<div class="status-box ${type}">${html}</div>`;
+        }
+
+        async function init() {
+            if (typeof window.ethereum === 'undefined') {
+                throw new Error('MetaMask not found!');
+            }
+
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+            const userAddress = await signer.getAddress();
+            const manager = await contract.propertyManager();
+
+            if (userAddress.toLowerCase() !== manager.toLowerCase()) {
+                throw new Error(`You are not the property manager!\n\nYour address: ${userAddress}\nManager: ${manager}`);
+            }
+
+            return { userAddress, manager };
+        }
+
+        window.checkStatus = async function() {
+            try {
+                showMessage('🔄 Checking status...', 'loading');
+
+                await init();
+
+                const currentProposalId = await contract.currentProposal();
+                const proposal = await contract.proposals(currentProposalId);
+
+                const now = Math.floor(Date.now() / 1000);
+                const startTime = proposal.startTime.toNumber();
+                const endTime = proposal.endTime.toNumber();
+                const isExpired = now > endTime;
+
+                let html = '<h3>📊 Current Status</h3>';
+                html += '<div class="detail">';
+                html += `<strong>Current Proposal ID:</strong> ${currentProposalId}<br>`;
+                html += `<strong>Is Active:</strong> ${proposal.isActive ? '✅ YES' : '❌ NO'}<br>`;
+                html += `<strong>Title:</strong> ${proposal.title || '(No title)'}<br>`;
+                html += `<strong>Description:</strong> ${proposal.description || '(No description)'}<br><br>`;
+
+                if (proposal.isActive) {
+                    html += `<strong>Start Time:</strong> ${new Date(startTime * 1000).toLocaleString()}<br>`;
+                    html += `<strong>End Time:</strong> ${new Date(endTime * 1000).toLocaleString()}<br>`;
+                    html += `<strong>Status:</strong> ${isExpired ? '⏰ EXPIRED (can be ended)' : '🔴 STILL RUNNING'}<br>`;
+                    html += `<strong>Total Votes:</strong> ${proposal.totalVotes}<br>`;
+                }
+
+                html += '</div>';
+
+                if (proposal.isActive) {
+                    html += '<div class="status-box warning">';
+                    html += '<h4>⚠️ Active Proposal Found!</h4>';
+                    html += '<p>This is why you cannot create a new proposal.</p>';
+
+                    if (isExpired) {
+                        html += '<p><strong>✅ Good news:</strong> The voting period has ended. You can now end this proposal.</p>';
+                        html += '<p>Click the <strong>"🛑 End Active Proposal"</strong> button above to end it.</p>';
+                    } else {
+                        const timeLeft = endTime - now;
+                        const hoursLeft = Math.floor(timeLeft / 3600);
+                        const minutesLeft = Math.floor((timeLeft % 3600) / 60);
+
+                        html += `<p><strong>❌ Voting is still active!</strong></p>`;
+                        html += `<p>Time remaining: <strong>${hoursLeft} hours ${minutesLeft} minutes</strong></p>`;
+                        html += '<p>You must wait until the voting period ends before you can end this proposal.</p>';
+                    }
+
+                    html += '</div>';
+                } else {
+                    html += '<div class="status-box success">';
+                    html += '<h4>✅ No Active Proposal</h4>';
+                    html += '<p>You can create a new proposal now!</p>';
+                    html += '<p>Go back to the main page and create a new proposal.</p>';
+                    html += '</div>';
+                }
+
+                showMessage(html, 'info');
+
+            } catch (error) {
+                showMessage(`❌ <strong>Error:</strong><br>${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        window.endActiveProposal = async function() {
+            try {
+                showMessage('🔄 Checking if proposal can be ended...', 'loading');
+
+                const { userAddress, manager } = await init();
+
+                const currentProposalId = await contract.currentProposal();
+                const proposal = await contract.proposals(currentProposalId);
+
+                if (!proposal.isActive) {
+                    showMessage('ℹ️ No active proposal to end.', 'info');
+                    return;
+                }
+
+                const now = Math.floor(Date.now() / 1000);
+                const endTime = proposal.endTime.toNumber();
+
+                if (now <= endTime) {
+                    const timeLeft = endTime - now;
+                    const hoursLeft = Math.floor(timeLeft / 3600);
+                    const minutesLeft = Math.floor((timeLeft % 3600) / 60);
+
+                    showMessage(
+                        `❌ <strong>Cannot End Yet!</strong><br><br>` +
+                        `Voting is still active for <strong>${hoursLeft} hours ${minutesLeft} minutes</strong>.<br><br>` +
+                        `The proposal will automatically become eligible to end at:<br>` +
+                        `<strong>${new Date(endTime * 1000).toLocaleString()}</strong>`,
+                        'error'
+                    );
+                    return;
+                }
+
+                showMessage('⏳ Ending proposal... Please confirm in MetaMask.', 'loading');
+
+                const tx = await contract.endProposal(currentProposalId);
+
+                showMessage(`✅ Transaction sent!<br>Hash: ${tx.hash}<br><br>⏳ Waiting for confirmation...`, 'info');
+
+                const receipt = await tx.wait();
+
+                showMessage(
+                    `🎉 <strong>Proposal Ended Successfully!</strong><br><br>` +
+                    `Transaction Hash: ${tx.hash}<br>` +
+                    `Block: ${receipt.blockNumber}<br><br>` +
+                    `✅ You can now create a new proposal!`,
+                    'success'
+                );
+
+            } catch (error) {
+                showMessage(`❌ <strong>Error:</strong><br>${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        window.viewProposal = async function() {
+            try {
+                showMessage('🔄 Loading proposal details...', 'loading');
+
+                await init();
+
+                const currentProposalId = await contract.currentProposal();
+                const proposal = await contract.proposals(currentProposalId);
+
+                const now = Math.floor(Date.now() / 1000);
+                const startTime = proposal.startTime.toNumber();
+                const endTime = proposal.endTime.toNumber();
+                const isExpired = now > endTime;
+
+                let html = '<div class="proposal-card ' + (proposal.isActive ? (isExpired ? 'expired' : 'active') : '') + '">';
+                html += `<h3>Proposal #${currentProposalId}</h3>`;
+
+                if (proposal.isActive) {
+                    html += `<span class="badge ${isExpired ? 'badge-expired' : 'badge-active'}">${isExpired ? 'EXPIRED' : 'ACTIVE'}</span>`;
+                } else {
+                    html += '<span class="badge badge-ended">ENDED</span>';
+                }
+
+                html += '<div class="detail">';
+                html += `<strong>Title:</strong> ${proposal.title || '(No title)'}<br><br>`;
+                html += `<strong>Description:</strong> ${proposal.description || '(No description)'}<br><br>`;
+
+                if (proposal.isActive || startTime > 0) {
+                    html += `<strong>Start:</strong> ${new Date(startTime * 1000).toLocaleString()}<br>`;
+                    html += `<strong>End:</strong> ${new Date(endTime * 1000).toLocaleString()}<br>`;
+                    html += `<strong>Duration:</strong> ${proposal.votingPeriod.toNumber() / 3600} hours<br><br>`;
+                }
+
+                html += `<strong>Total Votes:</strong> ${proposal.totalVotes}<br>`;
+                html += `<strong>Yes Votes:</strong> ${proposal.yesVotes}<br>`;
+                html += `<strong>No Votes:</strong> ${proposal.noVotes}<br>`;
+                html += `<strong>Results Revealed:</strong> ${proposal.resultsRevealed ? 'Yes' : 'No'}<br>`;
+                html += '</div>';
+                html += '</div>';
+
+                showMessage(html, 'info');
+
+            } catch (error) {
+                showMessage(`❌ <strong>Error:</strong><br>${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

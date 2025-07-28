@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralized Voting Platform | Secure Community Governance</title>
+    <meta name="description" content="Privacy-preserving blockchain voting platform powered by fhEVM. Secure, anonymous, and transparent community governance.">
+    <script type="module" crossorigin src="./main.js?v=2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+        /* ========== CSS VARIABLES SYSTEM ========== */
+        :root {
+            /* Colors - Dark Theme */
+            --color-bg: #070910;
+            --color-bg-alt: #050614;
+            --color-text: #f5f7ff;
+            --color-text-muted: rgba(198, 207, 232, 0.72);
+            --color-text-subtle: rgba(148, 163, 184, 0.58);
+
+            /* Glassmorphism Panels */
+            --color-panel: rgba(16, 20, 36, 0.92);
+            --color-panel-alt: rgba(20, 25, 42, 0.88);
+            --color-panel-hover: rgba(24, 30, 48, 0.95);
+
+            /* Borders */
+            --color-border: rgba(120, 142, 182, 0.22);
+            --color-border-strong: rgba(120, 142, 182, 0.38);
+
+            /* Accent Colors */
+            --accent: #6d6eff;
+            --accent-hover: #5456ff;
+            --accent-soft: rgba(109, 110, 255, 0.16);
+            --accent-border: rgba(109, 110, 255, 0.28);
+
+            /* Status Colors */
+            --success: #2bc37b;
+            --success-soft: rgba(43, 195, 123, 0.16);
+            --success-border: rgba(43, 195, 123, 0.28);
+
+            --error: #ef5350;
+            --error-soft: rgba(239, 83, 80, 0.16);
+            --error-border: rgba(239, 83, 80, 0.28);
+
+            --warning: #f3b13b;
+            --warning-soft: rgba(243, 177, 59, 0.16);
+            --warning-border: rgba(243, 177, 59, 0.28);
+
+            --info: #3b82f6;
+            --info-soft: rgba(59, 130, 246, 0.16);
+            --info-border: rgba(59, 130, 246, 0.28);
+
+            /* Spacing System (8px base) */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.5rem;
+            --space-6: 2rem;
+
+            /* Border Radius */
+            --radius-sm: 0.5rem;
+            --radius-md: 1.05rem;
+            --radius-lg: 1.35rem;
+            --radius-full: 999px;
+
+            /* Transitions */
+            --transition-default: 180ms cubic-bezier(0.2, 0.9, 0.35, 1);
+            --transition-smooth: 300ms ease-out;
+            --transition-quick: 150ms ease-in-out;
+
+            /* Fonts */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --font-mono: 'DM Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+            --shadow-panel: 0 18px 42px -32px rgba(5, 8, 18, 0.9);
+            --shadow-accent: 0 8px 24px rgba(109, 110, 255, 0.25);
+        }
+
+        /* ========== GLOBAL STYLES ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--color-text);
+            background: radial-gradient(circle at 20% -10%, rgba(109, 110, 255, 0.25), transparent 55%),
+                        radial-gradient(circle at 80% 0%, rgba(43, 195, 123, 0.08), transparent 60%),
+                        linear-gradient(160deg, var(--color-bg-alt) 0%, var(--color-bg) 100%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* ========== GLASSMORPHISM COMPONENTS ========== */
+        .panel {
+            background: var(--color-panel);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-panel);
+            transition: all var(--transition-default);
+        }
+
+        .panel:hover {
+            border-color: var(--color-border-strong);
+            transform: translateY(-1px);
+            box-shadow: 0 24px 48px -36px rgba(5, 8, 18, 0.95);
+        }
+
+        .panel-alt {
+            background: var(--color-panel-alt);
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: 0.55rem 1.2rem;
+            border: none;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--transition-default);
+            outline: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-accent);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.18);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(148, 163, 184, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #199964);
+            color: #ffffff;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(43, 195, 123, 0.3);
+        }
+
+        .btn-error {
+            background: linear-gradient(135deg, var(--error), #e53935);
+            color: #ffffff;
+        }
+
+        .btn-error:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(239, 83, 80, 0.3);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-lg {
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* ========== INPUTS ========== */
+        .form-input {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            background: rgba(10, 13, 22, 0.9);
+            color: var(--color-text);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            transition: all var(--transition-default);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(109, 110, 255, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--color-text-subtle);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
+        }
+
+        /* ========== BADGES ========== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.64rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .badge-accent {
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            color: rgba(180, 182, 255, 0.95);
+        }
+
+        .badge-success {
+            background: var(--success-soft);
+            border: 1px solid var(--success-border);
+            color: var(--success);
+        }
+
+        .badge-error {
+            background: var(--error-soft);
+            border: 1px solid var(--error-border);
+            color: var(--error);
+        }
+
+        .badge-warning {
+            background: var(--warning-soft);
+            border: 1px solid var(--warning-border);
+            color: var(--warning);
+        }
+
+        .badge-info {
+            background: var(--info-soft);
+            border: 1px solid var(--info-border);
+            color: var(--info);
+        }
+
+        /* ========== STAT CARDS ========== */
+        .stat-card {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .stat-label {
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--color-text);
+        }
+
+        /* ========== LOADING SPINNER ========== */
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ========== TOAST NOTIFICATIONS ========== */
+        .toast {
+            position: relative;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            animation: slideInRight 0.3s ease-out;
+            min-width: 280px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .toast-success {
+            background: var(--success-soft);
+            border: 1px solid var(--success-border);
+            color: var(--success);
+        }
+
+        .toast-error {
+            background: var(--error-soft);
+            border: 1px solid var(--error-border);
+            color: var(--error);
+        }
+
+        .toast-warning {
+            background: var(--warning-soft);
+            border: 1px solid var(--warning-border);
+            color: var(--warning);
+        }
+
+        .toast-info {
+            background: var(--info-soft);
+            border: 1px solid var(--info-border);
+            color: var(--info);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ========== LAYOUT ========== */
+        .container {
+            width: min(960px, 100% - 2.4rem);
+            margin: 0 auto;
+        }
+
+        .layout-grid {
+            display: grid;
+            gap: var(--space-4);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--color-panel);
+            border-bottom: 1px solid var(--color-border);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4) 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .logo-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border-radius: var(--radius-md);
+        }
+
+        .wallet-address {
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            color: var(--color-text-muted);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 960px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .btn {
+                width: 100%;
+                font-size: 0.9rem;
+            }
+
+            .container {
+                width: calc(100% - 1.6rem);
+            }
+
+            .stat-value {
+                font-size: 1.3rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: var(--space-3);
+            }
+        }
+
+        /* ========== UTILITIES ========== */
+        .hidden {
+            display: none !important;
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        .text-muted {
+            color: var(--color-text-muted);
+        }
+
+        .text-subtle {
+            color: var(--color-text-subtle);
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast-container" style="position: fixed; top: 1.75rem; right: 1.75rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <span>Voting Platform</span>
+                </div>
+                <div id="wallet-section">
+                    <button id="connect-wallet" class="btn btn-primary btn-sm">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                        </svg>
+                        Connect Wallet
+                    </button>
+                    <div id="wallet-info" class="hidden" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.9rem; background: var(--color-panel-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full);">
+                        <div style="width: 6px; height: 6px; background: var(--success); border-radius: 50%;"></div>
+                        <span id="wallet-address" class="wallet-address"></span>
+                        <button id="disconnect-wallet" class="btn btn-secondary btn-sm">Disconnect</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container" style="padding: var(--space-6) 0;">
+
+        <!-- Stats Grid -->
+        <div class="layout-grid" style="margin-bottom: var(--space-6);">
+            <div class="panel stat-card" style="padding: 1.2rem;">
+                <div class="stat-label">Total Residents</div>
+                <div class="stat-value" id="total-residents">0</div>
+                <div class="badge badge-accent">Registered</div>
+            </div>
+
+            <div class="panel stat-card" style="padding: 1.2rem;">
+                <div class="stat-label">Active Proposals</div>
+                <div class="stat-value" id="active-proposals">0</div>
+                <div class="badge badge-info">Live</div>
+            </div>
+
+            <div class="panel stat-card" style="padding: 1.2rem;">
+                <div class="stat-label">Your Status</div>
+                <div class="stat-value" id="user-status" style="font-size: 1.1rem;">Not Registered</div>
+                <div class="badge badge-warning">Pending</div>
+            </div>
+
+            <div class="panel stat-card" style="padding: 1.2rem;">
+                <div class="stat-label">Network</div>
+                <div class="stat-value" id="network-name" style="font-size: 1.2rem;">Sepolia</div>
+                <div class="badge badge-success">Connected</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div style="display: grid; gap: var(--space-5); grid-template-columns: 1fr 2fr;">
+
+            <!-- Left Column - Actions -->
+            <div style="display: flex; flex-direction: column; gap: var(--space-5);">
+
+                <!-- Register Card -->
+                <div class="panel" style="padding: 1.5rem;">
+                    <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: var(--space-4);">Register Resident</h2>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                        <div>
+                            <label class="form-label">Unit Number</label>
+                            <input type="number" id="unit-number" placeholder="Enter unit number" class="form-input">
+                        </div>
+                        <button id="register-btn" class="btn btn-primary">
+                            <span>Register Now</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Create Proposal Card -->
+                <div class="panel" style="padding: 1.5rem;">
+                    <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: var(--space-4);">Create Proposal</h2>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                        <div>
+                            <label class="form-label">Title</label>
+                            <input type="text" id="proposal-title" placeholder="Proposal title" class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Description</label>
+                            <textarea id="proposal-description" rows="3" placeholder="Describe your proposal" class="form-input"></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">Duration (hours)</label>
+                            <input type="number" id="proposal-duration" value="24" class="form-input">
+                        </div>
+                        <button id="create-proposal-btn" class="btn btn-primary">
+                            <span>Create Proposal</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Proposals -->
+            <div style="display: flex; flex-direction: column; gap: var(--space-5);">
+
+                <!-- Proposals List -->
+                <div class="panel" style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5);">
+                        <h2 style="font-size: 1.3rem; font-weight: 700;">Active Proposals</h2>
+                        <button id="refresh-proposals" class="btn btn-secondary btn-sm">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="proposals-list">
+                        <div style="text-align: center; padding: var(--space-6); color: var(--color-text-subtle);">
+                            <svg style="width: 48px; height: 48px; margin: 0 auto var(--space-3); opacity: 0.4;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                            <p style="font-size: 0.9rem;">No active proposals</p>
+                            <p style="font-size: 0.75rem; margin-top: var(--space-2);">Create your first proposal to get started</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="panel" style="padding: 1.5rem;">
+                    <h2 style="font-size: 1.125rem; font-weight: 700; margin-bottom: var(--space-4);">Transaction History</h2>
+                    <div id="transaction-history">
+                        <p style="color: var(--color-text-subtle); font-size: 0.875rem;">No transactions yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="panel" style="margin-top: var(--space-6); padding: 1.5rem;">
+            <div style="display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div>
+                    <h3 style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3);">About Platform</h3>
+                    <p style="font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.6;">Privacy-preserving blockchain voting platform powered by fhEVM. Secure, anonymous, and transparent community governance.</p>
+                </div>
+                <div>
+                    <h3 style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3);">Technology Stack</h3>
+                    <ul style="font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.8; list-style: none;">
+                        <li>✓ Fully Homomorphic Encryption</li>
+                        <li>✓ Ethereum Sepolia Testnet</li>
+                        <li>✓ Modern Web3 Integration</li>
+                        <li>✓ Hardhat Development</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3);">Contract Information</h3>
+                    <p id="contract-address-footer" class="mono" style="font-size: 0.75rem; color: var(--color-text-muted); word-break: break-all; margin-bottom: var(--space-2);"></p>
+                    <a id="etherscan-link" href="#" target="_blank" style="font-size: 0.875rem; color: var(--accent); text-decoration: none; transition: color var(--transition-quick);">View on Etherscan →</a>
+                </div>
+            </div>
+            <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); text-align: center;">
+                <p style="font-size: 0.75rem; color: var(--color-text-subtle);">&copy; 2025 Decentralized Voting Platform. Built with fhEVM.</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试 - 无Loading版本</title>
+    <style>
+        /* 强制隐藏所有可能的loading元素 */
+        .loading,
+        .loader,
+        .spinner,
+        [class*="loading"],
+        [class*="spinner"],
+        [id*="loading"],
+        [id*="spinner"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* 隐藏固定定位的大型元素 */
+        [style*="position: fixed"][style*="width"][style*="height"] {
+            display: none !important;
+        }
+    </style>
+    <script src="./config.js"></script>
+    <script type="module" src="./main.js?v=6"></script>
+</head>
+<body>
+    <h1>测试页面 - Loading已隐藏</h1>
+    <button id="connect-wallet" style="padding: 10px 20px; font-size: 16px;">Connect Wallet</button>
+    <div id="wallet-info" class="hidden"></div>
+    <div id="wallet-address"></div>
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px;"></div>
+
+    <script>
+        // 监控DOM变化,自动隐藏任何新出现的loading元素
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { // Element node
+                        const style = window.getComputedStyle(node);
+                        if (style.position === 'fixed' &&
+                            parseInt(style.width) > 50 &&
+                            parseInt(style.height) > 50) {
+                            console.log('隐藏大型固定元素:', node);
+                            node.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+</body>
+</html>

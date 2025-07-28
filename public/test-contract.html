@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试合约地址</title>
+</head>
+<body>
+    <h1>测试合约地址有效性</h1>
+    <button id="testBtn">测试合约</button>
+    <div id="result" style="margin-top: 20px; font-family: monospace; white-space: pre;"></div>
+
+    <script type="module">
+        import { ethers } from './lib/ethers.esm.min.js';
+
+        const resultDiv = document.getElementById('result');
+        function log(msg) {
+            console.log(msg);
+            resultDiv.textContent += msg + '\n';
+        }
+
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            try {
+                log('=== 测试开始 ===');
+
+                // 连接钱包
+                if (!window.ethereum) {
+                    log('❌ MetaMask未安装');
+                    return;
+                }
+
+                log('1. 请求账户...');
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                log('✓ 账户已授权');
+
+                // 创建provider
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const network = await provider.getNetwork();
+                log('2. 当前网络: ' + network.name + ' (chainId: ' + network.chainId + ')');
+
+                // 测试合约地址
+                const contractAddress = '0x6Ece9C29F6E47876bC3809BAC99c175273E184aB';
+                log('3. 测试合约地址: ' + contractAddress);
+
+                // 检查是否有代码
+                const code = await provider.getCode(contractAddress);
+                log('4. 合约代码长度: ' + code.length + ' 字符');
+
+                if (code === '0x') {
+                    log('❌ 警告: 该地址没有合约代码!');
+                    log('   可能原因:');
+                    log('   - 合约未部署到当前网络');
+                    log('   - 地址错误');
+                    log('   - 网络不对 (应该是Sepolia)');
+                } else {
+                    log('✓ 合约存在! 代码: ' + code.substring(0, 100) + '...');
+                }
+
+                // 获取余额
+                const balance = await provider.getBalance(contractAddress);
+                log('5. 合约余额: ' + ethers.utils.formatEther(balance) + ' ETH');
+
+                log('=== 测试完成 ===');
+
+            } catch (error) {
+                log('❌ 错误: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .result-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: bold;
+            color: #667eea;
+            display: inline-block;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 钱包连接诊断工具</h1>
+
+        <!-- Test 1: MetaMask Detection -->
+        <div class="test-section">
+            <h3>1. MetaMask 检测</h3>
+            <div id="metamaskStatus" class="status info">检查中...</div>
+            <div id="metamaskDetails"></div>
+        </div>
+
+        <!-- Test 2: Ethers.js Library -->
+        <div class="test-section">
+            <h3>2. Ethers.js 库检测</h3>
+            <div id="ethersStatus" class="status info">检查中...</div>
+            <div id="ethersDetails"></div>
+        </div>
+
+        <!-- Test 3: Config File -->
+        <div class="test-section">
+            <h3>3. 配置文件检测</h3>
+            <div id="configStatus" class="status info">检查中...</div>
+            <div id="configDetails"></div>
+        </div>
+
+        <!-- Test 4: Network Check -->
+        <div class="test-section">
+            <h3>4. 网络检测</h3>
+            <button id="checkNetwork">检查网络</button>
+            <div id="networkStatus"></div>
+            <div id="networkDetails"></div>
+        </div>
+
+        <!-- Test 5: Connection Test -->
+        <div class="test-section">
+            <h3>5. 连接测试</h3>
+            <button id="testConnect">测试连接钱包</button>
+            <div id="connectionStatus"></div>
+            <div id="connectionDetails"></div>
+        </div>
+
+        <!-- Console Log -->
+        <div class="test-section">
+            <h3>📋 控制台日志</h3>
+            <div id="consoleLog" class="code" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="./config.js"></script>
+    <script>
+        // Console logging
+        const logContainer = document.getElementById('consoleLog');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addLog(type, ...args) {
+            const message = args.map(arg => {
+                if (typeof arg === 'object') {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
+
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.marginBottom = '5px';
+            logEntry.innerHTML = `<span style="color: #888;">[${timestamp}]</span> <span style="color: ${
+                type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffd93d' : '#6bcf7f'
+            };">[${type.toUpperCase()}]</span> ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('log', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('error', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('warn', ...args);
+        };
+
+        // Test 1: Check MetaMask
+        function checkMetaMask() {
+            const statusDiv = document.getElementById('metamaskStatus');
+            const detailsDiv = document.getElementById('metamaskDetails');
+
+            console.log('=== 检查 MetaMask ===');
+
+            if (typeof window.ethereum !== 'undefined') {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ MetaMask 已安装';
+
+                let details = '<div class="result-item"><span class="result-label">ethereum 对象:</span> 存在</div>';
+                details += `<div class="result-item"><span class="result-label">isMetaMask:</span> ${window.ethereum.isMetaMask || 'unknown'}</div>`;
+                details += `<div class="result-item"><span class="result-label">chainId:</span> ${window.ethereum.chainId || 'unknown'}</div>`;
+                details += `<div class="result-item"><span class="result-label">selectedAddress:</span> ${window.ethereum.selectedAddress || 'none'}</div>`;
+
+                detailsDiv.innerHTML = details;
+                console.log('✓ MetaMask detected');
+                console.log('Chain ID:', window.ethereum.chainId);
+                console.log('Selected Address:', window.ethereum.selectedAddress);
+                return true;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ MetaMask 未安装';
+                detailsDiv.innerHTML = `
+                    <div class="warning" style="margin-top: 10px;">
+                        <strong>解决方案:</strong><br>
+                        1. 安装 MetaMask 浏览器扩展<br>
+                        2. 访问: <a href="https://metamask.io/download/" target="_blank">https://metamask.io/download/</a><br>
+                        3. 安装完成后刷新此页面
+                    </div>
+                `;
+                console.error('✗ MetaMask not detected');
+                return false;
+            }
+        }
+
+        // Test 2: Check Ethers.js
+        function checkEthers() {
+            const statusDiv = document.getElementById('ethersStatus');
+            const detailsDiv = document.getElementById('ethersDetails');
+
+            console.log('=== 检查 Ethers.js ===');
+
+            if (typeof ethers !== 'undefined') {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Ethers.js 已加载';
+
+                let details = '<div class="result-item"><span class="result-label">ethers 对象:</span> 存在</div>';
+                details += `<div class="result-item"><span class="result-label">版本:</span> ${ethers.version || 'unknown'}</div>`;
+
+                detailsDiv.innerHTML = details;
+                console.log('✓ Ethers.js loaded, version:', ethers.version);
+                return true;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Ethers.js 未加载';
+                detailsDiv.innerHTML = `
+                    <div class="error" style="margin-top: 10px;">
+                        <strong>问题:</strong> Ethers.js 库未能加载<br>
+                        <strong>可能原因:</strong> CDN 连接失败或被屏蔽<br>
+                        <strong>解决方案:</strong> 检查网络连接,或使用本地 ethers.js 文件
+                    </div>
+                `;
+                console.error('✗ Ethers.js not loaded');
+                return false;
+            }
+        }
+
+        // Test 3: Check Config
+        function checkConfig() {
+            const statusDiv = document.getElementById('configStatus');
+            const detailsDiv = document.getElementById('configDetails');
+
+            console.log('=== 检查配置文件 ===');
+
+            if (typeof CONFIG !== 'undefined') {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ 配置文件已加载';
+
+                let details = '<div class="result-item"><span class="result-label">合约地址:</span> ' + CONFIG.CONTRACT_ADDRESS + '</div>';
+                details += '<div class="result-item"><span class="result-label">网络:</span> ' + CONFIG.CHAIN_NAME + '</div>';
+                details += '<div class="result-item"><span class="result-label">Chain ID:</span> ' + CONFIG.CHAIN_ID + '</div>';
+                details += '<div class="result-item"><span class="result-label">RPC URL:</span> ' + CONFIG.RPC_URL + '</div>';
+                details += '<div class="result-item"><span class="result-label">ABI 条目:</span> ' + (CONFIG.ABI ? CONFIG.ABI.length : 0) + '</div>';
+
+                detailsDiv.innerHTML = details;
+                console.log('✓ CONFIG loaded');
+                console.log('Contract Address:', CONFIG.CONTRACT_ADDRESS);
+                console.log('Network:', CONFIG.CHAIN_NAME);
+                return true;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 配置文件未加载';
+                detailsDiv.innerHTML = `
+                    <div class="error" style="margin-top: 10px;">
+                        <strong>问题:</strong> config.js 未能加载<br>
+                        <strong>解决方案:</strong> 检查 public/config.js 文件是否存在
+                    </div>
+                `;
+                console.error('✗ CONFIG not loaded');
+                return false;
+            }
+        }
+
+        // Test 4: Check Network
+        async function checkNetwork() {
+            const statusDiv = document.getElementById('networkStatus');
+            const detailsDiv = document.getElementById('networkDetails');
+
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '检查中...';
+            detailsDiv.innerHTML = '';
+
+            console.log('=== 检查网络 ===');
+
+            if (typeof window.ethereum === 'undefined') {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 请先安装 MetaMask';
+                return;
+            }
+
+            try {
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const chainIdDecimal = parseInt(chainId, 16);
+
+                console.log('Current Chain ID:', chainId, '(', chainIdDecimal, ')');
+
+                let details = '<div class="result-item"><span class="result-label">当前 Chain ID (hex):</span> ' + chainId + '</div>';
+                details += '<div class="result-item"><span class="result-label">当前 Chain ID (decimal):</span> ' + chainIdDecimal + '</div>';
+
+                if (typeof CONFIG !== 'undefined') {
+                    const isCorrect = chainIdDecimal === CONFIG.CHAIN_ID;
+                    details += '<div class="result-item"><span class="result-label">期望 Chain ID:</span> ' + CONFIG.CHAIN_ID + '</div>';
+                    details += '<div class="result-item"><span class="result-label">网络匹配:</span> ' + (isCorrect ? '✅ 正确' : '❌ 错误') + '</div>';
+
+                    if (isCorrect) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ 网络正确 (Sepolia Testnet)';
+                    } else {
+                        statusDiv.className = 'status warning';
+                        statusDiv.textContent = '⚠️ 网络不匹配';
+                        details += `<div class="warning" style="margin-top: 10px;">
+                            <strong>解决方案:</strong><br>
+                            在 MetaMask 中切换到 Sepolia 测试网<br>
+                            Chain ID: 11155111 (0xaa36a7)
+                        </div>`;
+                    }
+                } else {
+                    statusDiv.className = 'status warning';
+                    statusDiv.textContent = '⚠️ 无法验证网络 (配置未加载)';
+                }
+
+                detailsDiv.innerHTML = details;
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 检查网络失败';
+                detailsDiv.innerHTML = `<div class="error">错误: ${error.message}</div>`;
+                console.error('Network check error:', error);
+            }
+        }
+
+        // Test 5: Test Connection
+        async function testConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            const detailsDiv = document.getElementById('connectionDetails');
+
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '连接中...';
+            detailsDiv.innerHTML = '';
+
+            console.log('=== 测试连接 ===');
+
+            if (typeof window.ethereum === 'undefined') {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ MetaMask 未安装';
+                return;
+            }
+
+            if (typeof ethers === 'undefined') {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Ethers.js 未加载';
+                return;
+            }
+
+            try {
+                console.log('Requesting accounts...');
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                console.log('Accounts received:', accounts);
+
+                if (accounts.length === 0) {
+                    throw new Error('未返回账户');
+                }
+
+                console.log('Creating provider...');
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                console.log('Provider created');
+
+                console.log('Getting signer...');
+                const signer = provider.getSigner();
+                console.log('Signer obtained');
+
+                console.log('Getting address...');
+                const address = await signer.getAddress();
+                console.log('Address:', address);
+
+                console.log('Getting network...');
+                const network = await provider.getNetwork();
+                console.log('Network:', network);
+
+                console.log('Getting balance...');
+                const balance = await provider.getBalance(address);
+                const balanceEth = ethers.utils.formatEther(balance);
+                console.log('Balance:', balanceEth, 'ETH');
+
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ 连接成功!';
+
+                let details = '<div class="result-item"><span class="result-label">钱包地址:</span> ' + address + '</div>';
+                details += '<div class="result-item"><span class="result-label">网络:</span> ' + network.name + ' (Chain ID: ' + network.chainId + ')</div>';
+                details += '<div class="result-item"><span class="result-label">余额:</span> ' + balanceEth + ' ETH</div>';
+
+                detailsDiv.innerHTML = details;
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 连接失败';
+
+                let errorDetails = '<div class="error">';
+                errorDetails += '<strong>错误类型:</strong> ' + (error.name || 'Unknown') + '<br>';
+                errorDetails += '<strong>错误信息:</strong> ' + error.message + '<br>';
+                errorDetails += '<strong>错误代码:</strong> ' + (error.code || 'N/A') + '<br>';
+                errorDetails += '</div>';
+
+                if (error.code === 4001) {
+                    errorDetails += `<div class="warning" style="margin-top: 10px;">
+                        <strong>用户拒绝了连接请求</strong><br>
+                        请在 MetaMask 弹窗中点击"连接"
+                    </div>`;
+                } else if (error.code === -32002) {
+                    errorDetails += `<div class="warning" style="margin-top: 10px;">
+                        <strong>连接请求已在等待中</strong><br>
+                        请检查 MetaMask 扩展,可能有待处理的请求
+                    </div>`;
+                }
+
+                detailsDiv.innerHTML = errorDetails;
+                console.error('Connection error:', error);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('checkNetwork').addEventListener('click', checkNetwork);
+        document.getElementById('testConnect').addEventListener('click', testConnection);
+
+        // Run initial checks
+        window.addEventListener('load', () => {
+            console.log('=== 钱包连接诊断工具启动 ===');
+            setTimeout(() => {
+                checkMetaMask();
+                checkEthers();
+                checkConfig();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
