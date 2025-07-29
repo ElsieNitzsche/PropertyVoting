@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Wallet Connection</title>
+</head>
+<body>
+    <h1>Debug Wallet Connection</h1>
+    <button id="connect-wallet">Connect Wallet</button>
+    <div id="logs" style="margin-top: 20px; font-family: monospace; white-space: pre; background: #f0f0f0; padding: 10px;"></div>
+
+    <script src="./config.js"></script>
+    <script type="module">
+        import { ethers } from './lib/ethers.esm.min.js';
+
+        const logsDiv = document.getElementById('logs');
+        function log(msg) {
+            console.log(msg);
+            logsDiv.textContent += msg + '\n';
+        }
+
+        log('=== Debug Start ===');
+        log('1. Checking window.CONFIG...');
+        log('   CONFIG exists: ' + (typeof window.CONFIG !== 'undefined'));
+        if (window.CONFIG) {
+            log('   CONTRACT_ADDRESS: ' + window.CONFIG.CONTRACT_ADDRESS);
+        }
+
+        log('2. Checking ethers...');
+        log('   ethers exists: ' + (typeof ethers !== 'undefined'));
+
+        log('3. Checking MetaMask...');
+        log('   window.ethereum exists: ' + (typeof window.ethereum !== 'undefined'));
+
+        log('4. Getting button element...');
+        const btn = document.getElementById('connect-wallet');
+        log('   Button found: ' + (btn !== null));
+
+        if (btn) {
+            log('5. Adding click listener...');
+            btn.addEventListener('click', async () => {
+                log('6. Button clicked!');
+                try {
+                    if (!window.ethereum) {
+                        log('   ERROR: MetaMask not found');
+                        return;
+                    }
+                    log('7. Requesting accounts...');
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    log('8. SUCCESS! Connected: ' + accounts[0]);
+                } catch (error) {
+                    log('   ERROR: ' + error.message);
+                }
+            });
+            log('   Listener added successfully');
+        }
+
+        log('=== Debug Complete ===');
+    </script>
+</body>
+</html>

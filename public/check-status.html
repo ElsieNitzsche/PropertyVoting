@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Registration Status</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Registration Status Checker</h1>
+        <p>Check if your address is already registered in the voting contract</p>
+
+        <button onclick="checkStatus()">Check My Status</button>
+        <button onclick="checkContract()">Check Contract Info</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        const CONTRACT_ADDRESS = '0x6Ece9C29F6E47876bC3809BAC99c175273E184aB';
+        const ABI = [
+            "function residents(address) view returns (bool isRegistered, bool hasVoted, uint256 registrationTime, uint8 encryptedUnit)",
+            "function propertyManager() view returns (address)",
+            "function currentProposal() view returns (uint16)",
+            "function registeredResidents(uint256) view returns (address)"
+        ];
+
+        let provider;
+        let contract;
+
+        window.checkStatus = async function() {
+            const resultDiv = document.getElementById('result');
+
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    resultDiv.innerHTML = '<div class="status error">MetaMask not found! Please install MetaMask.</div>';
+                    return;
+                }
+
+                // Request account access
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const address = await signer.getAddress();
+
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+
+                resultDiv.innerHTML = '<div class="status info">Checking status...</div>';
+
+                // Check registration status
+                const residentInfo = await contract.residents(address);
+
+                let html = '<div class="status ' + (residentInfo.isRegistered ? 'success' : 'error') + '">';
+                html += '<h3>Your Status:</h3>';
+                html += '<pre>';
+                html += `Address: ${address}\n`;
+                html += `Is Registered: ${residentInfo.isRegistered ? '✅ YES' : '❌ NO'}\n`;
+                html += `Has Voted: ${residentInfo.hasVoted ? 'Yes' : 'No'}\n`;
+
+                if (residentInfo.isRegistered) {
+                    const date = new Date(residentInfo.registrationTime.toNumber() * 1000);
+                    html += `Registration Time: ${date.toLocaleString()}\n`;
+                }
+
+                html += '</pre>';
+
+                if (residentInfo.isRegistered) {
+                    html += '<p><strong>⚠️ You are already registered!</strong></p>';
+                    html += '<p>You cannot register again with this address.</p>';
+                    html += '<p>If you want to register a different address, please switch accounts in MetaMask.</p>';
+                } else {
+                    html += '<p><strong>✅ You can register!</strong></p>';
+                    html += '<p>Go back to the main page and register your unit number.</p>';
+                }
+
+                html += '</div>';
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<div class="status error"><strong>Error:</strong> ' + error.message + '</div>';
+            }
+        }
+
+        window.checkContract = async function() {
+            const resultDiv = document.getElementById('result');
+
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    resultDiv.innerHTML = '<div class="status error">MetaMask not found!</div>';
+                    return;
+                }
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+
+                resultDiv.innerHTML = '<div class="status info">Loading contract info...</div>';
+
+                const manager = await contract.propertyManager();
+                const currentProposal = await contract.currentProposal();
+
+                let html = '<div class="status info">';
+                html += '<h3>Contract Information:</h3>';
+                html += '<pre>';
+                html += `Contract Address: ${CONTRACT_ADDRESS}\n`;
+                html += `Property Manager: ${manager}\n`;
+                html += `Current Proposal ID: ${currentProposal}\n`;
+                html += `Network: Sepolia Testnet (Chain ID: 11155111)\n`;
+                html += '</pre>';
+                html += '</div>';
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<div class="status error"><strong>Error:</strong> ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+// Property Voting System - Main Application
+// Built with Ethers.js v5, Wagmi pattern, and Tailwind CSS
+
+import { ethers } from 'https://cdn.ethers.io/lib/ethers-5.7.2.esm.min.js';
+
+// Configuration
+const CONFIG = {
+    CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000', // Update after deployment
+    CHAIN_ID: 11155111, // Sepolia
+    CHAIN_NAME: 'Sepolia',
+    RPC_URL: 'https://rpc.sepolia.org',
+    EXPLORER_URL: 'https://sepolia.etherscan.io'
+};
+
+// Contract ABI (simplified for main functions)
+const CONTRACT_ABI = [
+    "function registerResident(uint256 unitNumber) external",
+    "function createProposal(string memory title, string memory description, uint256 votingDurationHours) external",
+    "function submitVote(uint256 proposalId, uint8 voteChoice) external",
+    "function endProposal(uint256 proposalId) external",
+    "function processVoteResults(uint256 proposalId, bytes[] calldata signatures) external",
+    "function getCurrentProposalInfo() external view returns (uint256 proposalId, string memory title, string memory description, uint256 deadline, bool isActive)",
+    "function getResidentStatus(address resident) external view returns (bool isRegistered, uint256 unitNumber, bool hasVoted)",
+    "function getProposalResults(uint256 proposalId) external view returns (uint256 votesFor, uint256 votesAgainst, bool isDecrypted, bool passed)",
+    "function getTotalResidents() external view returns (uint256)",
+    "function getVotingTimeLeft() external view returns (uint256)",
+    "function isVotingActive() external view returns (bool)",
+    "function currentProposal() external view returns (uint256)",
+    "function propertyManager() external view returns (address)"
+];
+
+// State
+let provider;
+let signer;
+let contract;
+let userAddress;
+let transactions = [];
+
+// DOM Elements
+const connectWalletBtn = document.getElementById('connect-wallet');
+const disconnectWalletBtn = document.getElementById('disconnect-wallet');
+const walletInfo = document.getElementById('wallet-info');
+const walletAddressSpan = document.getElementById('wallet-address');
+const walletSection = document.getElementById('wallet-section');
+
+const registerBtn = document.getElementById('register-btn');
+const unitNumberInput = document.getElementById('unit-number');
+
+const createProposalBtn = document.getElementById('create-proposal-btn');
+const proposalTitleInput = document.getElementById('proposal-title');
+const proposalDescriptionInput = document.getElementById('proposal-description');
+const proposalDurationInput = document.getElementById('proposal-duration');
+
+const refreshProposalsBtn = document.getElementById('refresh-proposals');
+const proposalsList = document.getElementById('proposals-list');
+
+const totalResidentsSpan = document.getElementById('total-residents');
+const activeProposalsSpan = document.getElementById('active-proposals');
+const userStatusSpan = document.getElementById('user-status');
+const networkNameSpan = document.getElementById('network-name');
+const transactionHistory = document.getElementById('transaction-history');
+
+const contractAddressFooter = document.getElementById('contract-address-footer');
+const etherscanLink = document.getElementById('etherscan-link');
+
+// Utility Functions
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+
+    const bgColor = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+    }[type] || 'bg-gray-500';
+
+    toast.className = `toast ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3`;
+    toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>${message}</span>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function showLoading(button) {
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `
+        <div class="loading-spinner"></div>
+        <span>Processing...</span>
+    `;
+    return () => {
+        button.disabled = false;
+        button.innerHTML = originalContent;
+    };
+}
+
+function formatAddress(address) {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+}
+
+function addTransaction(type, hash, status = 'pending') {
+    transactions.unshift({ type, hash, status, timestamp: new Date() });
+    updateTransactionHistory();
+}
+
+function updateTransactionHistory() {
+    if (transactions.length === 0) {
+        transactionHistory.innerHTML = '<p class="text-gray-400 text-sm">No transactions yet</p>';
+        return;
+    }
+
+    transactionHistory.innerHTML = transactions.slice(0, 5).map(tx => `
+        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-2 h-2 ${tx.status === 'success' ? 'bg-green-500' : tx.status === 'error' ? 'bg-red-500' : 'bg-yellow-500'} rounded-full"></div>
+                <div>
+                    <p class="text-sm font-medium text-gray-800">${tx.type}</p>
+                    <p class="text-xs text-gray-500">${tx.timestamp.toLocaleTimeString()}</p>
+                </div>
+            </div>
+            <a href="${CONFIG.EXPLORER_URL}/tx/${tx.hash}" target="_blank" class="text-purple-600 text-xs hover:text-purple-700">
+                View →
+            </a>
+        </div>
+    `).join('');
+}
+
+// Web3 Functions
+async function connectWallet() {
+    try {
+        if (!window.ethereum) {
+            showToast('Please install MetaMask to use this application', 'error');
+            return;
+        }
+
+        // Request account access
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        // Check network
+        const network = await provider.getNetwork();
+        if (network.chainId !== CONFIG.CHAIN_ID) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: ethers.utils.hexValue(CONFIG.CHAIN_ID) }],
+                });
+            } catch (error) {
+                showToast('Please switch to Sepolia network', 'error');
+                return;
+            }
+        }
+
+        // Initialize contract
+        contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        // Update UI
+        walletAddressSpan.textContent = formatAddress(userAddress);
+        connectWalletBtn.classList.add('hidden');
+        walletInfo.classList.remove('hidden');
+
+        showToast('Wallet connected successfully', 'success');
+
+        // Load initial data
+        await loadDashboardData();
+
+    } catch (error) {
+        console.error('Error connecting wallet:', error);
+        showToast('Failed to connect wallet: ' + error.message, 'error');
+    }
+}
+
+async function disconnectWallet() {
+    userAddress = null;
+    provider = null;
+    signer = null;
+    contract = null;
+
+    connectWalletBtn.classList.remove('hidden');
+    walletInfo.classList.add('hidden');
+
+    showToast('Wallet disconnected', 'info');
+}
+
+async function loadDashboardData() {
+    try {
+        if (!contract) return;
+
+        // Load total residents
+        const totalResidents = await contract.getTotalResidents();
+        totalResidentsSpan.textContent = totalResidents.toString();
+
+        // Load current proposal
+        const currentProposalId = await contract.currentProposal();
+        activeProposalsSpan.textContent = currentProposalId.gt(0) ? '1' : '0';
+
+        // Load user status
+        const [isRegistered, unitNumber, hasVoted] = await contract.getResidentStatus(userAddress);
+        userStatusSpan.textContent = isRegistered ? `Unit ${unitNumber.toString()}` : 'Not Registered';
+        userStatusSpan.className = isRegistered ? 'text-lg font-semibold text-green-600' : 'text-lg font-semibold text-gray-400';
+
+        // Load proposals
+        await loadProposals();
+
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showToast('Failed to load data: ' + error.message, 'error');
+    }
+}
+
+async function loadProposals() {
+    try {
+        if (!contract) return;
+
+        const currentProposalId = await contract.currentProposal();
+
+        if (currentProposalId.eq(0)) {
+            proposalsList.innerHTML = `
+                <div class="text-center py-12 text-gray-400">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p>No active proposals</p>
+                    <p class="text-sm mt-2">Create your first proposal to get started</p>
+                </div>
+            `;
+            return;
+        }
+
+        const [proposalId, title, description, deadline, isActive] = await contract.getCurrentProposalInfo();
+        const [votesFor, votesAgainst, isDecrypted, passed] = await contract.getProposalResults(proposalId);
+        const [, , hasVoted] = await contract.getResidentStatus(userAddress);
+        const timeLeft = await contract.getVotingTimeLeft();
+
+        // Convert BigNumber to number for time calculations
+        const timeLeftNumber = Number(timeLeft.toString());
+        const hoursLeft = Math.floor(timeLeftNumber / 3600);
+        const minutesLeft = Math.floor((timeLeftNumber % 3600) / 60);
+
+        proposalsList.innerHTML = `
+            <div class="border border-gray-200 rounded-lg p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">${title}</h3>
+                        <p class="text-gray-600 mt-2">${description}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-sm font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                        ${isActive ? 'Active' : 'Ended'}
+                    </span>
+                </div>
+
+                ${isActive ? `
+                    <div class="mb-4">
+                        <div class="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Time remaining: ${hoursLeft}h ${minutesLeft}m</span>
+                        </div>
+                        ${hasVoted ? `
+                            <p class="text-green-600 text-sm font-medium">✓ You have voted</p>
+                        ` : `
+                            <div class="flex space-x-3 mt-4">
+                                <button onclick="vote('${proposalId.toString()}', 1)" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition">
+                                    Vote For
+                                </button>
+                                <button onclick="vote('${proposalId.toString()}', 0)" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-medium transition">
+                                    Vote Against
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                ` : ''}
+
+                ${isDecrypted ? `
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">Results</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Votes For</p>
+                                <p class="text-2xl font-bold text-green-600">${votesFor.toString()}</p>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Votes Against</p>
+                                <p class="text-2xl font-bold text-red-600">${votesAgainst.toString()}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 rounded-lg ${passed ? 'bg-green-100' : 'bg-red-100'}">
+                            <p class="text-center font-semibold ${passed ? 'text-green-800' : 'text-red-800'}">
+                                Proposal ${passed ? 'PASSED' : 'REJECTED'}
+                            </p>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Error loading proposals:', error);
+        showToast('Failed to load proposals: ' + error.message, 'error');
+    }
+}
+
+async function registerResident() {
+    const hideLoading = showLoading(registerBtn);
+
+    try {
+        const unitNumber = unitNumberInput.value;
+
+        if (!unitNumber) {
+            showToast('Please enter a unit number', 'warning');
+            return;
+        }
+
+        const tx = await contract.registerResident(unitNumber);
+        addTransaction('Register Resident', tx.hash);
+
+        showToast('Registration submitted. Waiting for confirmation...', 'info');
+
+        await tx.wait();
+
+        transactions[0].status = 'success';
+        updateTransactionHistory();
+
+        showToast('Registration successful!', 'success');
+        unitNumberInput.value = '';
+
+        await loadDashboardData();
+
+    } catch (error) {
+        console.error('Error registering resident:', error);
+        if (transactions[0]) transactions[0].status = 'error';
+        updateTransactionHistory();
+        showToast('Registration failed: ' + error.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function createProposal() {
+    const hideLoading = showLoading(createProposalBtn);
+
+    try {
+        const title = proposalTitleInput.value;
+        const description = proposalDescriptionInput.value;
+        const duration = proposalDurationInput.value;
+
+        if (!title || !description || !duration) {
+            showToast('Please fill in all fields', 'warning');
+            hideLoading();
+            return;
+        }
+
+        // Check if there's already an active proposal
+        const isActive = await contract.isVotingActive();
+        if (isActive) {
+            showToast('Cannot create proposal: A previous proposal is still active. Please wait for it to end.', 'error');
+            hideLoading();
+            return;
+        }
+
+        const tx = await contract.createProposal(title, description, duration);
+        addTransaction('Create Proposal', tx.hash);
+
+        showToast('Proposal submitted. Waiting for confirmation...', 'info');
+
+        await tx.wait();
+
+        transactions[0].status = 'success';
+        updateTransactionHistory();
+
+        showToast('Proposal created successfully!', 'success');
+        proposalTitleInput.value = '';
+        proposalDescriptionInput.value = '';
+        proposalDurationInput.value = '24';
+
+        await loadDashboardData();
+
+    } catch (error) {
+        console.error('Error creating proposal:', error);
+        if (transactions[0]) transactions[0].status = 'error';
+        updateTransactionHistory();
+
+        // Provide user-friendly error message
+        let errorMessage = error.message;
+        if (error.message.includes('Previous proposal still active')) {
+            errorMessage = 'Cannot create proposal: A previous proposal is still active. Please wait for it to end before creating a new one.';
+        } else if (error.message.includes('Only property manager')) {
+            errorMessage = 'Only the property manager can create proposals.';
+        } else if (error.message.includes('Only registered residents')) {
+            errorMessage = 'You must be a registered resident to create proposals.';
+        }
+
+        showToast(errorMessage, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function vote(proposalId, voteChoice) {
+    try {
+        const tx = await contract.submitVote(proposalId, voteChoice);
+        addTransaction(`Vote ${voteChoice === 1 ? 'For' : 'Against'}`, tx.hash);
+
+        showToast('Vote submitted. Waiting for confirmation...', 'info');
+
+        await tx.wait();
+
+        transactions[0].status = 'success';
+        updateTransactionHistory();
+
+        showToast('Vote recorded successfully!', 'success');
+
+        await loadProposals();
+
+    } catch (error) {
+        console.error('Error voting:', error);
+        if (transactions[0]) transactions[0].status = 'error';
+        updateTransactionHistory();
+        showToast('Failed to vote: ' + error.message, 'error');
+    }
+}
+
+// Event Listeners
+connectWalletBtn.addEventListener('click', connectWallet);
+disconnectWalletBtn.addEventListener('click', disconnectWallet);
+registerBtn.addEventListener('click', registerResident);
+createProposalBtn.addEventListener('click', createProposal);
+refreshProposalsBtn.addEventListener('click', loadProposals);
+
+// Make vote function global
+window.vote = vote;
+
+// Initialize
+contractAddressFooter.textContent = CONFIG.CONTRACT_ADDRESS;
+etherscanLink.href = `${CONFIG.EXPLORER_URL}/address/${CONFIG.CONTRACT_ADDRESS}`;
+
+// Auto-connect if previously connected
+window.ethereum?.on('accountsChanged', (accounts) => {
+    if (accounts.length === 0) {
+        disconnectWallet();
+    } else {
+        connectWallet();
+    }
+});
+
+window.ethereum?.on('chainChanged', () => {
+    window.location.reload();
+});
+
+showToast('Welcome to Property Voting System', 'info');

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Connection Test</title>
+</head>
+<body>
+    <h1>MetaMask Connection Test</h1>
+    <button id="connectBtn">Connect Wallet</button>
+    <div id="result"></div>
+    <div id="logs" style="margin-top: 20px; font-family: monospace; white-space: pre;"></div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+        const logsDiv = document.getElementById('logs');
+
+        function log(msg) {
+            console.log(msg);
+            logsDiv.textContent += msg + '\n';
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                log('=== Starting wallet connection test ===');
+
+                // Check if MetaMask is installed
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask not detected');
+                    resultDiv.innerHTML = '<p style="color: red;">MetaMask is not installed!</p>';
+                    return;
+                }
+                log('✓ MetaMask detected');
+
+                // Request accounts
+                log('Requesting accounts...');
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                log('✓ Accounts received: ' + accounts.length);
+                log('Account: ' + accounts[0]);
+
+                // Get network
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                log('✓ Current Chain ID: ' + chainId);
+
+                resultDiv.innerHTML = `
+                    <p style="color: green;">✓ Wallet connected successfully!</p>
+                    <p>Address: ${accounts[0]}</p>
+                    <p>Chain ID: ${chainId}</p>
+                `;
+
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                resultDiv.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        });
+
+        log('Page loaded. Click button to test wallet connection.');
+    </script>
+</body>
+</html>

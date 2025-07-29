@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Registration Issue</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .container {
+            background: #252526;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h1 { color: #4ec9b0; }
+        h3 { color: #dcdcaa; margin-top: 20px; }
+        button {
+            background: #0e639c;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            font-family: inherit;
+        }
+        button:hover { background: #1177bb; }
+        .log {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 3px solid #4ec9b0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error { border-left-color: #f48771; color: #f48771; }
+        .success { border-left-color: #4ec9b0; color: #4ec9b0; }
+        .warning { border-left-color: #dcdcaa; color: #dcdcaa; }
+        .info { border-left-color: #569cd6; color: #569cd6; }
+        input {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 200px;
+            font-family: inherit;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #2d2d30;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Registration Debug Tool</h1>
+        <p>This tool will help diagnose why registration is failing</p>
+
+        <div class="section">
+            <h3>Step 1: Connect & Check Status</h3>
+            <button onclick="connectAndCheck()">🔍 Connect & Diagnose</button>
+        </div>
+
+        <div class="section">
+            <h3>Step 2: Try Registration (if not registered)</h3>
+            <input type="number" id="unitNumber" placeholder="Unit Number (1-200)" min="1" max="200" value="1">
+            <button onclick="tryRegister()">📝 Try Register</button>
+        </div>
+
+        <div class="section">
+            <h3>Step 3: Advanced Debugging</h3>
+            <button onclick="callStatic()">🧪 Test Call (Static)</button>
+            <button onclick="checkAllowance()">💰 Check Gas & Balance</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const CONTRACT_ADDRESS = '0x6Ece9C29F6E47876bC3809BAC99c175273E184aB';
+        const ABI = [
+            "function residents(address) view returns (bool isRegistered, bool hasVoted, uint256 registrationTime, uint8 encryptedUnit)",
+            "function propertyManager() view returns (address)",
+            "function currentProposal() view returns (uint16)",
+            "function registerResident(uint8 unitNumber) external",
+            "function registeredResidents(uint256) view returns (address)"
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+        let userAddress;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = message;
+            output.appendChild(div);
+            console.log(message);
+        }
+
+        window.connectAndCheck = async function() {
+            document.getElementById('output').innerHTML = '';
+
+            try {
+                log('🔌 Connecting to MetaMask...', 'info');
+
+                if (typeof window.ethereum === 'undefined') {
+                    log('❌ MetaMask not found!', 'error');
+                    return;
+                }
+
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+
+                log(`✅ Connected: ${userAddress}`, 'success');
+
+                // Check network
+                const network = await provider.getNetwork();
+                log(`🌐 Network: ${network.name} (Chain ID: ${network.chainId})`, 'info');
+
+                if (network.chainId !== 11155111) {
+                    log('⚠️  WARNING: Not on Sepolia! Please switch to Sepolia testnet.', 'warning');
+                }
+
+                // Check balance
+                const balance = await provider.getBalance(userAddress);
+                log(`💰 Balance: ${ethers.utils.formatEther(balance)} ETH`, 'info');
+
+                if (balance.lt(ethers.utils.parseEther('0.001'))) {
+                    log('⚠️  WARNING: Low balance! Get test ETH from https://sepoliafaucet.com', 'warning');
+                }
+
+                // Connect to contract
+                contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+                log(`📜 Contract: ${CONTRACT_ADDRESS}`, 'info');
+
+                // Check if manager
+                const manager = await contract.propertyManager();
+                log(`👔 Property Manager: ${manager}`, 'info');
+
+                if (manager.toLowerCase() === userAddress.toLowerCase()) {
+                    log('✅ You are the property manager!', 'success');
+                }
+
+                // Check registration status
+                log('\n📋 Checking registration status...', 'info');
+                const residentInfo = await contract.residents(userAddress);
+
+                log(`Is Registered: ${residentInfo.isRegistered}`, residentInfo.isRegistered ? 'warning' : 'success');
+                log(`Has Voted: ${residentInfo.hasVoted}`, 'info');
+
+                if (residentInfo.isRegistered) {
+                    const date = new Date(residentInfo.registrationTime.toNumber() * 1000);
+                    log(`Registration Time: ${date.toLocaleString()}`, 'info');
+                    log('\n❌ PROBLEM FOUND: You are already registered!', 'error');
+                    log('🔧 SOLUTION: Use a different MetaMask account, or skip registration.', 'warning');
+                } else {
+                    log('\n✅ Good news: You are NOT registered yet. You can proceed with registration.', 'success');
+                }
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        window.tryRegister = async function() {
+            const unitNumber = document.getElementById('unitNumber').value;
+
+            try {
+                if (!contract) {
+                    log('⚠️  Please run "Connect & Diagnose" first!', 'warning');
+                    return;
+                }
+
+                if (!unitNumber || unitNumber < 1 || unitNumber > 200) {
+                    log('❌ Invalid unit number! Must be between 1-200.', 'error');
+                    return;
+                }
+
+                log(`\n📝 Attempting to register unit #${unitNumber}...`, 'info');
+
+                // First check if already registered
+                const residentInfo = await contract.residents(userAddress);
+                if (residentInfo.isRegistered) {
+                    log('❌ Cannot register: Already registered!', 'error');
+                    return;
+                }
+
+                // Estimate gas
+                log('⛽ Estimating gas...', 'info');
+                const gasEstimate = await contract.estimateGas.registerResident(unitNumber);
+                log(`Estimated gas: ${gasEstimate.toString()}`, 'info');
+
+                // Send transaction
+                log('📤 Sending transaction...', 'info');
+                const tx = await contract.registerResident(unitNumber, {
+                    gasLimit: gasEstimate.mul(120).div(100) // 20% buffer
+                });
+
+                log(`✅ Transaction sent: ${tx.hash}`, 'success');
+                log('⏳ Waiting for confirmation...', 'info');
+
+                const receipt = await tx.wait();
+                log(`✅ Confirmed in block ${receipt.blockNumber}`, 'success');
+                log('🎉 Registration successful!', 'success');
+
+            } catch (error) {
+                log(`\n❌ Registration failed!`, 'error');
+                log(`Error message: ${error.message}`, 'error');
+
+                if (error.message.includes('Already registered')) {
+                    log('\n🔧 This address is already registered.', 'warning');
+                } else if (error.message.includes('execution reverted')) {
+                    log('\n🔧 Transaction reverted. Possible reasons:', 'warning');
+                    log('   1. Already registered', 'info');
+                    log('   2. Invalid unit number', 'info');
+                    log('   3. Contract issue', 'info');
+                }
+
+                console.error(error);
+            }
+        }
+
+        window.callStatic = async function() {
+            const unitNumber = document.getElementById('unitNumber').value;
+
+            try {
+                if (!contract) {
+                    log('⚠️  Please run "Connect & Diagnose" first!', 'warning');
+                    return;
+                }
+
+                log(`\n🧪 Testing static call for unit #${unitNumber}...`, 'info');
+
+                // This will simulate the transaction without sending it
+                await contract.callStatic.registerResident(unitNumber);
+
+                log('✅ Static call succeeded! Transaction should work.', 'success');
+
+            } catch (error) {
+                log(`\n❌ Static call failed!`, 'error');
+                log(`Error: ${error.message}`, 'error');
+
+                // Try to decode the revert reason
+                if (error.error && error.error.message) {
+                    log(`Revert reason: ${error.error.message}`, 'error');
+                }
+
+                console.error(error);
+            }
+        }
+
+        window.checkAllowance = async function() {
+            try {
+                if (!provider || !userAddress) {
+                    log('⚠️  Please run "Connect & Diagnose" first!', 'warning');
+                    return;
+                }
+
+                log('\n💰 Checking gas and balance...', 'info');
+
+                const balance = await provider.getBalance(userAddress);
+                log(`Balance: ${ethers.utils.formatEther(balance)} ETH`, 'info');
+
+                const gasPrice = await provider.getGasPrice();
+                log(`Gas Price: ${ethers.utils.formatUnits(gasPrice, 'gwei')} Gwei`, 'info');
+
+                const estimatedCost = gasPrice.mul(1000000);
+                log(`Estimated max cost: ${ethers.utils.formatEther(estimatedCost)} ETH`, 'info');
+
+                if (balance.gt(estimatedCost)) {
+                    log('✅ Sufficient balance for transaction', 'success');
+                } else {
+                    log('❌ Insufficient balance!', 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
