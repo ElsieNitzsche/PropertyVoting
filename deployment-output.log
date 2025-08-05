@@ -1,0 +1,29 @@
+[1m[31mDeclarationError:[39m[22m Identifier already declared.
+  --> contracts/GatewayWithPauserSet.sol:24:5:
+   |
+24 |     error GatewayPaused();
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+Note: The previous declaration is here:
+  --> contracts/GatewayWithPauserSet.sol:19:5:
+   |
+19 |     event GatewayPaused(address indexed pauser);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+[1m[31mTypeError:[39m[22m Wrong argument count for function call: 0 arguments given but expected 1.
+  --> contracts/GatewayWithPauserSet.sol:52:20:
+   |
+52 |             revert GatewayPaused();
+   |                    ^^^^^^^^^^^^^^^
+
+
+[1m[31mTypeError:[39m[22m Expression has to be an error.
+  --> contracts/GatewayWithPauserSet.sol:52:20:
+   |
+52 |             revert GatewayPaused();
+   |                    ^^^^^^^^^^^^^
+
+
+[31m[1mError[22m[39m [31m[1mHH600:[22m[39m Compilation failed
+
+For more info go to https://hardhat.org/HH600 or run Hardhat with --show-stack-traces
