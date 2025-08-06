@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+coverage/
+artifacts/
+cache/
+typechain-types/
+.next/
+out/
+*.min.js
+*.bundle.js
+public/lib/
