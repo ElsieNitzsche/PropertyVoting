@@ -1,7 +1,16 @@
 {
-  "name": "anonymous-property-voting",
+  "name": "anonymous-property-voting-dapp125",
   "version": 2,
-  "public": true,
-  "cleanUrls": true,
-  "trailingSlash": false
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
