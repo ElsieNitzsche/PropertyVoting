@@ -4,59 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anonymous Property Management Voting System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* ============================================
-           CSS VARIABLES SYSTEM
-           ============================================ */
-        :root {
-            /* Colors */
-            --color-bg: #070910;
-            --color-text: #f5f7ff;
-            --color-text-dim: rgba(198, 207, 232, 0.72);
-            --color-panel: rgba(16, 20, 36, 0.92);
-            --color-panel-alt: rgba(20, 24, 42, 0.85);
-            --color-border: rgba(120, 142, 182, 0.22);
-            --color-border-strong: rgba(120, 142, 182, 0.32);
-            --accent: #6d6eff;
-            --accent-hover: #5456ff;
-            --success: #2bc37b;
-            --success-soft: rgba(43, 195, 123, 0.16);
-            --warning: #f3b13b;
-            --warning-soft: rgba(243, 177, 59, 0.16);
-            --error: #ef5350;
-            --error-soft: rgba(239, 83, 80, 0.16);
-            --info: #3b82f6;
-            --info-soft: rgba(59, 130, 246, 0.16);
-
-            /* Spacing */
-            --space-1: 0.25rem;
-            --space-2: 0.5rem;
-            --space-3: 0.75rem;
-            --space-4: 1rem;
-            --space-5: 1.5rem;
-            --space-6: 2rem;
-
-            /* Radius */
-            --radius-sm: 0.5rem;
-            --radius-md: 1.05rem;
-            --radius-lg: 1.35rem;
-            --radius-full: 999px;
-
-            /* Transitions */
-            --transition: 180ms cubic-bezier(0.2, 0.9, 0.35, 1);
-            --transition-smooth: 300ms ease-out;
-
-            /* Typography */
-            --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --font-mono: 'DM Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
-        }
-
-        /* ============================================
-           GLOBAL STYLES
-           ============================================ */
         * {
             margin: 0;
             padding: 0;
@@ -64,581 +12,269 @@
         }
 
         body {
-            font-family: var(--font-sans);
-            line-height: 1.55;
-            color: var(--color-text);
-            font-size: 14px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-
-            /* Gradient Background */
-            background: radial-gradient(circle at 20% -10%, rgba(109, 110, 255, 0.25), transparent 55%),
-                        radial-gradient(circle at 80% 0%, rgba(43, 195, 123, 0.08), transparent 60%),
-                        linear-gradient(160deg, #050614 0%, #050712 100%);
-            background-attachment: fixed;
         }
 
-        /* ============================================
-           CONTAINER & LAYOUT
-           ============================================ */
         .container {
-            width: min(1200px, 100% - 2.4rem);
+            max-width: 1200px;
             margin: 0 auto;
-            padding: var(--space-5) 0;
+            padding: 20px;
         }
 
-        /* ============================================
-           HEADER
-           ============================================ */
         .header {
-            background: var(--color-panel);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-6);
-            margin-bottom: var(--space-5);
-            backdrop-filter: blur(18px);
-            box-shadow: 0 18px 42px -32px rgba(5, 8, 18, 0.9);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             text-align: center;
-            transition: all var(--transition);
-        }
-
-        .header:hover {
-            border-color: var(--color-border-strong);
-            transform: translateY(-1px);
         }
 
         .header h1 {
-            color: var(--color-text);
-            margin-bottom: var(--space-2);
-            font-size: clamp(1.7rem, 1.3rem + 1.2vw, 2.2rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
         }
 
         .header p {
-            color: var(--color-text-dim);
-            font-size: clamp(0.9rem, 0.85rem + 0.3vw, 1.1rem);
-            font-weight: 400;
+            color: #718096;
+            font-size: 1.1rem;
         }
 
-        /* ============================================
-           NETWORK INFO BADGE
-           ============================================ */
-        .network-info {
-            background: var(--color-panel-alt);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-3) var(--space-4);
-            margin-bottom: var(--space-5);
-            font-size: 0.85rem;
-            backdrop-filter: blur(18px);
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-4);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .network-info strong {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .network-info .contract-address {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            background: rgba(109, 110, 255, 0.1);
-            padding: 0.2rem 0.6rem;
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(109, 110, 255, 0.22);
-        }
-
-        /* ============================================
-           GRID LAYOUT
-           ============================================ */
         .main-content {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: var(--space-5);
-            margin-bottom: var(--space-5);
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status.connected {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .status.disconnected {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+
+        .proposal-info {
+            background: linear-gradient(135deg, #faf5ff 0%, #f7fafc 100%);
+            border: 2px solid #d6bcfa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .proposal-info h3 {
+            color: #553c9a;
+            margin-bottom: 10px;
+        }
+
+        .voting-section {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .vote-btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .vote-yes {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .vote-no {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .results-display {
+            background: linear-gradient(135deg, #e6fffa 0%, #f0fff4 100%);
+            border: 2px solid #4fd1c7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .results-display h4 {
+            color: #234e52;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            position: relative;
+            height: 40px;
+        }
+
+        .result-fill {
+            height: 100%;
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .result-fill.yes {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .result-fill.no {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 15px 0;
         }
 
         .full-width {
             grid-column: 1 / -1;
         }
 
-        /* ============================================
-           CARDS (GLASSMORPHISM)
-           ============================================ */
-        .card {
-            background: var(--color-panel);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-5);
-            backdrop-filter: blur(18px);
-            box-shadow: 0 18px 42px -32px rgba(5, 8, 18, 0.9);
-            transition: all var(--transition);
-        }
-
-        .card:hover {
-            border-color: var(--color-border-strong);
-            transform: translateY(-1px);
-        }
-
-        .card h2 {
-            color: var(--color-text);
-            margin-bottom: var(--space-4);
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            padding-bottom: var(--space-3);
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        /* ============================================
-           FORM ELEMENTS
-           ============================================ */
-        .form-group {
-            margin-bottom: var(--space-4);
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: var(--space-2);
-            font-weight: 600;
-            color: var(--color-text);
+        .network-info {
+            background: linear-gradient(135deg, #e6fffa 0%, #f0fff4 100%);
+            border: 2px solid #4fd1c7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
             font-size: 0.9rem;
-            letter-spacing: 0.01em;
         }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.7rem 0.9rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--color-border);
-            background: var(--color-panel-alt);
-            color: var(--color-text);
-            font-size: 0.95rem;
-            font-family: var(--font-sans);
-            transition: all var(--transition);
+        .network-info strong {
+            color: #234e52;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(109, 110, 255, 0.2);
-            background: rgba(20, 24, 42, 0.95);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-            font-family: var(--font-sans);
-        }
-
-        .form-group select {
-            cursor: pointer;
-        }
-
-        /* ============================================
-           BUTTONS
-           ============================================ */
-        .btn {
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            color: white;
-            padding: 0.65rem 1.4rem;
-            border: none;
-            border-radius: var(--radius-full);
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            font-family: var(--font-sans);
-            transition: all var(--transition);
-            letter-spacing: 0.02em;
-            width: 100%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-2);
-            box-shadow: 0 4px 12px rgba(109, 110, 255, 0.2);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(109, 110, 255, 0.35);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--warning), #ed8936);
-            box-shadow: 0 4px 12px rgba(243, 177, 59, 0.2);
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 6px 20px rgba(243, 177, 59, 0.35);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--error), #f43f5e);
-            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
-        }
-
-        .btn-danger:hover {
-            box-shadow: 0 6px 20px rgba(239, 83, 80, 0.35);
-        }
-
-        /* ============================================
-           BADGES
-           ============================================ */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.3rem 0.75rem;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: var(--success-soft);
-            border: 1px solid rgba(43, 195, 123, 0.28);
-            color: var(--success);
-        }
-
-        .badge-error {
-            background: var(--error-soft);
-            border: 1px solid rgba(239, 83, 80, 0.28);
-            color: var(--error);
-        }
-
-        .badge-warning {
-            background: var(--warning-soft);
-            border: 1px solid rgba(243, 177, 59, 0.28);
-            color: var(--warning);
-        }
-
-        .badge-info {
-            background: var(--info-soft);
-            border: 1px solid rgba(59, 130, 246, 0.28);
-            color: var(--info);
-        }
-
-        /* ============================================
-           STATUS SECTIONS
-           ============================================ */
-        .status {
-            padding: var(--space-4);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-4);
-            font-weight: 600;
-            text-align: center;
-            border: 1px solid;
-            backdrop-filter: blur(10px);
-            transition: all var(--transition);
-        }
-
-        .status.connected {
-            background: var(--success-soft);
-            color: var(--success);
-            border-color: rgba(43, 195, 123, 0.28);
-        }
-
-        .status.disconnected {
-            background: var(--error-soft);
-            color: var(--error);
-            border-color: rgba(239, 83, 80, 0.28);
-        }
-
-        /* ============================================
-           INFO BOXES
-           ============================================ */
-        .info-box {
-            background: var(--color-panel-alt);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-4);
-            margin-top: var(--space-3);
-            backdrop-filter: blur(10px);
-        }
-
-        .info-box strong {
-            color: var(--accent);
-            display: block;
-            margin-bottom: var(--space-2);
-        }
-
-        .address-display {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            background: rgba(109, 110, 255, 0.1);
-            padding: var(--space-3);
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(109, 110, 255, 0.22);
-            word-break: break-all;
-        }
-
-        /* ============================================
-           PROPOSAL INFO
-           ============================================ */
-        .proposal-info {
-            background: var(--color-panel-alt);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-5);
-            margin-bottom: var(--space-4);
-            backdrop-filter: blur(10px);
-        }
-
-        .proposal-info h3 {
-            color: var(--accent);
-            margin-bottom: var(--space-3);
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .proposal-info p {
-            margin-bottom: var(--space-2);
-            color: var(--color-text);
-            line-height: 1.6;
-        }
-
-        .proposal-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--space-3);
-            margin-top: var(--space-4);
-            padding-top: var(--space-4);
-            border-top: 1px solid var(--color-border);
-            font-size: 0.85rem;
-        }
-
-        .proposal-meta-item {
-            color: var(--color-text-dim);
-        }
-
-        .proposal-meta-item strong {
-            color: var(--color-text);
-            display: block;
-            margin-bottom: 0.2rem;
-        }
-
-        /* ============================================
-           VOTING SECTION
-           ============================================ */
-        .voting-section {
-            display: flex;
-            gap: var(--space-4);
-            margin-top: var(--space-4);
-        }
-
-        .vote-btn {
-            flex: 1;
-            padding: var(--space-4);
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .vote-yes {
-            background: linear-gradient(135deg, var(--success), #199964);
-            box-shadow: 0 4px 12px rgba(43, 195, 123, 0.2);
-        }
-
-        .vote-yes:hover {
-            box-shadow: 0 6px 20px rgba(43, 195, 123, 0.35);
-        }
-
-        .vote-no {
-            background: linear-gradient(135deg, var(--error), #f43f5e);
-            box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
-        }
-
-        .vote-no:hover {
-            box-shadow: 0 6px 20px rgba(239, 83, 80, 0.35);
-        }
-
-        /* ============================================
-           TIMER
-           ============================================ */
-        .timer {
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin: var(--space-4) 0;
-            padding: var(--space-3);
-            background: rgba(109, 110, 255, 0.1);
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(109, 110, 255, 0.22);
-        }
-
-        /* ============================================
-           RESULTS DISPLAY
-           ============================================ */
-        .results-display {
-            background: var(--color-panel-alt);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-5);
-            backdrop-filter: blur(10px);
-        }
-
-        .results-display h4 {
-            color: var(--color-text);
-            margin-bottom: var(--space-4);
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .result-item {
-            margin-bottom: var(--space-4);
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: var(--space-2);
-            font-weight: 600;
-        }
-
-        .result-bar {
-            background: rgba(120, 142, 182, 0.1);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            height: 45px;
-            position: relative;
-        }
-
-        .result-fill {
-            height: 100%;
-            transition: width 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .result-fill.yes {
-            background: linear-gradient(135deg, var(--success), #199964);
-        }
-
-        .result-fill.no {
-            background: linear-gradient(135deg, var(--error), #f43f5e);
-        }
-
-        .result-summary {
-            text-align: center;
-            margin-top: var(--space-5);
-            padding-top: var(--space-4);
-            border-top: 1px solid var(--color-border);
-        }
-
-        .result-summary p {
-            margin-bottom: var(--space-2);
-            font-size: 1.05rem;
-        }
-
-        .result-summary strong {
-            color: var(--accent);
-        }
-
-        .result-verdict {
-            margin-top: var(--space-3);
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .result-verdict.approved {
-            color: var(--success);
-        }
-
-        .result-verdict.rejected {
-            color: var(--error);
-        }
-
-        /* ============================================
-           TOAST NOTIFICATIONS
-           ============================================ */
-        .toast {
-            position: fixed;
-            top: 1.75rem;
-            right: 1.75rem;
-            padding: var(--space-4) var(--space-5);
-            border-radius: var(--radius-md);
-            backdrop-filter: blur(18px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            min-width: 300px;
-            max-width: 420px;
-            border: 1px solid;
-            animation: slideInRight 0.3s ease-out;
-            font-weight: 500;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .voting-section {
+                flex-direction: column;
             }
         }
 
-        .toast.toast-success {
-            background: var(--success-soft);
-            border-color: rgba(43, 195, 123, 0.28);
-            color: var(--success);
-        }
-
-        .toast.toast-error {
-            background: var(--error-soft);
-            border-color: rgba(239, 83, 80, 0.28);
-            color: var(--error);
-        }
-
-        .toast.toast-warning {
-            background: var(--warning-soft);
-            border-color: rgba(243, 177, 59, 0.28);
-            color: var(--warning);
-        }
-
-        .toast.toast-info {
-            background: var(--info-soft);
-            border-color: rgba(59, 130, 246, 0.28);
-            color: var(--info);
-        }
-
-        /* ============================================
-           LOADING SPINNER
-           ============================================ */
         .loading {
             display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
         }
 
         @keyframes spin {
@@ -646,140 +282,79 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ============================================
-           EMPTY STATES
-           ============================================ */
-        .empty-state {
-            text-align: center;
-            color: var(--color-text-dim);
-            padding: var(--space-6) var(--space-4);
-            font-size: 1.05rem;
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #f56565;
+            margin: 15px 0;
         }
 
-        /* ============================================
-           RESPONSIVE DESIGN
-           ============================================ */
-        @media (max-width: 960px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .proposal-meta {
-                grid-template-columns: 1fr;
-            }
+        .success-message {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #48bb78;
+            margin: 15px 0;
         }
-
-        @media (max-width: 600px) {
-            .container {
-                width: calc(100% - 1.5rem);
-                padding: var(--space-4) 0;
-            }
-
-            .header,
-            .card {
-                padding: var(--space-4);
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header p {
-                font-size: 0.9rem;
-            }
-
-            .voting-section {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-
-            .toast {
-                right: 1rem;
-                left: 1rem;
-                min-width: auto;
-            }
-
-            .network-info {
-                font-size: 0.75rem;
-                padding: var(--space-2) var(--space-3);
-            }
-
-            .network-info .contract-address {
-                font-size: 0.7rem;
-            }
-        }
-
-        /* ============================================
-           UTILITY CLASSES
-           ============================================ */
-        .mt-4 { margin-top: var(--space-4); }
-        .mb-4 { margin-bottom: var(--space-4); }
-        .hidden { display: none; }
-        .text-center { text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <h1>Anonymous Property Voting System</h1>
+            <h1>🏠 Anonymous Property Voting System</h1>
             <p>Privacy-Preserving Community Decision Making Platform powered by Zama FHE Technology</p>
         </div>
 
         <!-- Network Information -->
         <div class="network-info">
-            <div>
-                <strong>Network:</strong> Sepolia Testnet
-            </div>
-            <div>|</div>
-            <div>
-                <strong>Contract:</strong>
-                <span class="contract-address">0x6Ece9C29F6E47876bC3809BAC99c175273E184aB</span>
-            </div>
+            <strong>Network:</strong> Sepolia Testnet |
+            <strong>Contract:</strong> 0xD30412C56d2E50dE333512Bd91664d98475E8eFf
         </div>
 
         <div class="main-content">
             <!-- Wallet Connection Section -->
             <div class="card">
-                <h2>Wallet Connection</h2>
+                <h2>🔗 Wallet Connection</h2>
                 <div id="walletStatus" class="status disconnected">
                     Wallet Not Connected
                 </div>
                 <button id="connectWallet" class="btn">Connect MetaMask Wallet</button>
-                <div id="accountInfo" class="info-box hidden">
-                    <strong>Connected Account</strong>
-                    <div id="accountAddress" class="address-display"></div>
+                <div id="accountInfo" style="margin-top: 15px; display: none;">
+                    <strong>Account Address:</strong>
+                    <div id="accountAddress" style="word-break: break-all; margin-top: 5px; font-family: monospace; background: #f7fafc; padding: 10px; border-radius: 5px;"></div>
                 </div>
-                <div id="networkWarning" class="hidden"></div>
+                <div id="networkWarning" style="display: none;" class="error-message">
+                    ⚠️ Please switch to Sepolia Testnet to use this application
+                </div>
             </div>
 
             <!-- Resident Registration Section -->
             <div class="card">
-                <h2>Resident Registration</h2>
+                <h2>🏘️ Resident Registration</h2>
                 <div class="form-group">
-                    <label for="unitNumber">Unit Number</label>
+                    <label for="unitNumber">Unit Number:</label>
                     <input type="number" id="unitNumber" min="1" max="200" placeholder="Enter your unit number (1-200)">
                 </div>
                 <button id="registerResident" class="btn">Register as Resident</button>
-                <div id="residentStatus" class="mt-4"></div>
+                <div id="residentStatus" style="margin-top: 15px;"></div>
             </div>
 
             <!-- Admin Proposal Creation Section -->
             <div class="card">
-                <h2>Admin Functions</h2>
+                <h2>⚙️ Admin Functions</h2>
                 <div class="form-group">
-                    <label for="proposalTitle">Proposal Title</label>
+                    <label for="proposalTitle">Proposal Title:</label>
                     <input type="text" id="proposalTitle" placeholder="e.g., Community Fitness Equipment Upgrade">
                 </div>
                 <div class="form-group">
-                    <label for="proposalDescription">Proposal Description</label>
+                    <label for="proposalDescription">Proposal Description:</label>
                     <textarea id="proposalDescription" rows="4" placeholder="Detailed description of the proposal and its purpose..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="votingDuration">Voting Duration (hours)</label>
+                    <label for="votingDuration">Voting Duration (hours):</label>
                     <select id="votingDuration">
                         <option value="24">24 hours (1 day)</option>
                         <option value="48">48 hours (2 days)</option>
@@ -791,17 +366,14 @@
                     </select>
                 </div>
                 <button id="createProposal" class="btn btn-secondary">Create New Proposal</button>
-                <button id="endProposal" onclick="endExpiredProposal()" class="btn btn-danger" style="margin-top: var(--space-3);">🛑 End Expired Proposal</button>
-                <button onclick="forceRefresh()" class="btn" style="margin-top: var(--space-3); background: linear-gradient(135deg, var(--success), #16a34a);">🔄 Refresh Status</button>
-                <button onclick="debugContractState()" class="btn" style="margin-top: var(--space-3); background: linear-gradient(135deg, var(--info), #2563eb);">🔍 Debug Contract State</button>
             </div>
 
             <!-- Current Proposal Voting Section -->
             <div class="card">
-                <h2>Current Voting</h2>
+                <h2>🗳️ Current Voting</h2>
                 <div id="proposalDisplay">
-                    <div class="empty-state">
-                        No active voting currently
+                    <div id="noProposal" style="text-align: center; color: #718096; padding: 40px 0;">
+                        <p>📋 No active voting currently</p>
                     </div>
                 </div>
             </div>
@@ -809,26 +381,19 @@
 
         <!-- Voting Results Section -->
         <div class="card full-width">
-            <h2>Voting Results</h2>
+            <h2>📊 Voting Results</h2>
             <div id="resultsSection">
-                <div class="empty-state">No voting results available</div>
+                <p style="text-align: center; color: #718096; padding: 20px 0;">No voting results available</p>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="./public/config.js"></script>
     <script>
-        // Use CONFIG from config.js if available, otherwise use defaults
-        const CONTRACT_ADDRESS = (typeof CONFIG !== 'undefined') ? CONFIG.CONTRACT_ADDRESS : "0x6Ece9C29F6E47876bC3809BAC99c175273E184aB";
-        const SEPOLIA_CHAIN_ID = (typeof CONFIG !== 'undefined') ? CONFIG.NETWORK.CHAIN_ID_HEX : "0xaa36a7";
-        const NETWORK_CONFIG = (typeof CONFIG !== 'undefined') ? CONFIG.NETWORK : {
-            CHAIN_ID: 11155111,
-            NAME: "Sepolia Testnet",
-            RPC_URL: "https://rpc.sepolia.org",
-            EXPLORER_URL: "https://sepolia.etherscan.io"
-        };
-        const CONTRACT_ABI = (typeof CONFIG !== 'undefined') ? CONFIG.ABI : [
+        // Contract Configuration
+        const CONTRACT_ADDRESS = "0xD30412C56d2E50dE333512Bd91664d98475E8eFf";
+        const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111 in hex
+        const CONTRACT_ABI = [
             "function registerResident(uint8 unitNumber) external",
             "function createProposal(string memory title, string memory description, uint256 votingDurationHours) external",
             "function submitVote(uint16 proposalId, uint8 voteChoice) external",
@@ -838,13 +403,13 @@
             "function getProposalResults(uint16 proposalId) external view returns (bool, uint16, uint16, uint16, bool)",
             "function getTotalResidents() external view returns (uint256)",
             "function getVotingTimeLeft(uint16 proposalId) external view returns (uint256)",
-            "function isVotingActive(uint16 proposalId) external view returns (bool)"
+            "function isVotingActive(uint16 proposalId) external view returns (bool)",
+            "event ResidentRegistered(address indexed resident)",
+            "event ProposalCreated(uint16 indexed proposalId, string title, uint256 endTime)",
+            "event VoteSubmitted(address indexed voter, uint16 indexed proposalId)",
+            "event ProposalEnded(uint16 indexed proposalId, uint16 yesVotes, uint16 noVotes)",
+            "event ResultsRevealed(uint16 indexed proposalId, bool approved)"
         ];
-
-        console.log('=== Configuration Loaded ===');
-        console.log('Contract Address:', CONTRACT_ADDRESS);
-        console.log('Network:', NETWORK_CONFIG.NAME);
-        console.log('Chain ID:', NETWORK_CONFIG.CHAIN_ID);
 
         let provider;
         let signer;
@@ -874,161 +439,53 @@
 
         // Connect wallet function
         async function connectWallet() {
-            console.log('=== Connect Wallet Function Called ===');
-
-            // Check if MetaMask is installed
             if (typeof window.ethereum === 'undefined') {
-                console.error('MetaMask not detected');
-                showToast('Please install MetaMask wallet extension', 'error');
-                alert('MetaMask wallet not detected!\n\nPlease install MetaMask extension from:\nhttps://metamask.io/download/');
+                showError('Please install MetaMask wallet');
                 return;
             }
-            console.log('✓ MetaMask detected');
-
-            // Check if CONFIG is loaded
-            if (typeof CONFIG === 'undefined') {
-                console.error('CONFIG object not loaded from config.js');
-                showToast('Configuration failed to load. Please refresh the page.', 'error');
-                return;
-            }
-            console.log('✓ CONFIG object loaded');
-
-            // Check if ethers is loaded
-            if (typeof ethers === 'undefined') {
-                console.error('Ethers.js library not loaded');
-                showToast('Required library not loaded. Please refresh the page.', 'error');
-                return;
-            }
-            console.log('✓ Ethers.js library loaded');
 
             try {
-                console.log('Requesting wallet accounts...');
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                console.log('✓ Wallet accounts received:', accounts.length, 'account(s)');
-
-                if (accounts.length === 0) {
-                    console.error('No accounts returned from MetaMask');
-                    showToast('No accounts found. Please unlock MetaMask.', 'error');
-                    return;
-                }
-
-                console.log('Creating Web3Provider...');
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
                 provider = new ethers.providers.Web3Provider(window.ethereum);
-                console.log('✓ Provider created');
-
-                console.log('Getting signer...');
                 signer = provider.getSigner();
-                console.log('✓ Signer obtained');
 
-                console.log('Getting wallet address...');
                 userAddress = await signer.getAddress();
-                console.log('✓ Wallet Address:', userAddress);
 
                 // Check network
-                console.log('Checking network...');
                 const network = await provider.getNetwork();
-                console.log('✓ Current Network:', network.chainId, network.name);
-                console.log('Expected Network:', NETWORK_CONFIG.CHAIN_ID, NETWORK_CONFIG.NAME);
-
-                isCorrectNetwork = network.chainId === NETWORK_CONFIG.CHAIN_ID;
-                console.log('Is Correct Network:', isCorrectNetwork);
+                isCorrectNetwork = network.chainId === 11155111; // Sepolia
 
                 if (!isCorrectNetwork) {
-                    console.log('Wrong network detected. Attempting to switch to', NETWORK_CONFIG.NAME);
-                    showToast('Switching to ' + NETWORK_CONFIG.NAME + '...', 'warning');
-
+                    document.getElementById('networkWarning').style.display = 'block';
                     try {
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: SEPOLIA_CHAIN_ID }],
                         });
                         isCorrectNetwork = true;
-                        console.log('✓ Network switched successfully');
-                        showToast('Network switched to ' + NETWORK_CONFIG.NAME, 'success');
+                        document.getElementById('networkWarning').style.display = 'none';
                     } catch (switchError) {
                         console.error('Failed to switch network:', switchError);
-
-                        // If network doesn't exist, try to add it
-                        if (switchError.code === 4902) {
-                            console.log('Network not found. Attempting to add network...');
-                            try {
-                                await window.ethereum.request({
-                                    method: 'wallet_addEthereumChain',
-                                    params: [{
-                                        chainId: SEPOLIA_CHAIN_ID,
-                                        chainName: NETWORK_CONFIG.NAME,
-                                        rpcUrls: [NETWORK_CONFIG.RPC_URL],
-                                        blockExplorerUrls: [NETWORK_CONFIG.EXPLORER_URL],
-                                        nativeCurrency: {
-                                            name: 'Sepolia ETH',
-                                            symbol: 'SepoliaETH',
-                                            decimals: 18
-                                        }
-                                    }]
-                                });
-                                isCorrectNetwork = true;
-                                console.log('✓ Network added and switched successfully');
-                                showToast('Network added and switched to ' + NETWORK_CONFIG.NAME, 'success');
-                            } catch (addError) {
-                                console.error('Failed to add network:', addError);
-                                showToast('Please manually switch to ' + NETWORK_CONFIG.NAME + ' in MetaMask', 'error');
-                                return;
-                            }
-                        } else {
-                            showToast('Please manually switch to ' + NETWORK_CONFIG.NAME + ' in MetaMask', 'error');
-                            return;
-                        }
+                        return;
                     }
                 }
 
-                console.log('Creating contract instance...');
-                console.log('Contract Address:', CONTRACT_ADDRESS);
-                console.log('ABI Length:', CONTRACT_ABI.length);
-
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-                console.log('✓ Contract instance created successfully');
 
                 // Update UI
-                console.log('Updating UI...');
-                document.getElementById('walletStatus').textContent = 'Wallet Connected';
+                document.getElementById('walletStatus').textContent = '✅ Wallet Connected';
                 document.getElementById('walletStatus').className = 'status connected';
-                document.getElementById('accountInfo').classList.remove('hidden');
+                document.getElementById('accountInfo').style.display = 'block';
                 document.getElementById('accountAddress').textContent = userAddress;
                 document.getElementById('connectWallet').style.display = 'none';
-                console.log('✓ UI updated');
 
                 // Load data
-                console.log('Loading proposal data...');
                 await loadCurrentProposal();
-                console.log('✓ Proposal data loaded');
-
-                console.log('Checking resident status...');
                 await checkResidentStatus();
-                console.log('✓ Resident status checked');
-
-                console.log('=== Wallet Connection Successful! ===');
-                showToast('Wallet connected successfully!', 'success');
 
             } catch (error) {
-                console.error('=== Wallet Connection Error ===');
-                console.error('Error Type:', error.name);
-                console.error('Error Message:', error.message);
-                console.error('Error Code:', error.code);
-                console.error('Full Error:', error);
-
-                let errorMessage = 'Wallet connection failed: ';
-
-                if (error.code === 4001) {
-                    errorMessage = 'Connection rejected. Please approve the connection in MetaMask.';
-                } else if (error.code === -32002) {
-                    errorMessage = 'Connection request already pending. Please check MetaMask.';
-                } else if (error.message) {
-                    errorMessage += error.message;
-                } else {
-                    errorMessage += 'Unknown error. Please check console for details.';
-                }
-
-                showToast(errorMessage, 'error');
+                console.error('Wallet connection failed:', error);
+                showError('Wallet connection failed: ' + error.message);
             }
         }
 
@@ -1036,30 +493,30 @@
         async function registerResident() {
             const unitNumber = document.getElementById('unitNumber').value;
             if (!unitNumber || unitNumber < 1 || unitNumber > 200) {
-                showToast('Please enter a valid unit number (1-200)', 'warning');
+                showError('Please enter a valid unit number (1-200)');
                 return;
             }
 
             if (!isCorrectNetwork) {
-                showToast('Please switch to Sepolia Testnet', 'warning');
+                showError('Please switch to Sepolia Testnet');
                 return;
             }
 
             try {
                 const btn = document.getElementById('registerResident');
                 btn.disabled = true;
-                btn.innerHTML = 'Registering... <div class="loading"></div>';
+                btn.innerHTML = 'Registering...<div class="loading"></div>';
 
                 const tx = await contract.registerResident(parseInt(unitNumber));
-                showToast('Transaction submitted. Waiting for confirmation...', 'info');
+                showSuccess('Transaction submitted. Waiting for confirmation...');
 
                 await tx.wait();
-                showToast('Resident registration successful!', 'success');
+                showSuccess('Resident registration successful!');
                 await checkResidentStatus();
 
             } catch (error) {
                 console.error('Registration failed:', error);
-                showToast('Registration failed: ' + (error.reason || error.message), 'error');
+                showError('Registration failed: ' + (error.reason || error.message));
             } finally {
                 const btn = document.getElementById('registerResident');
                 btn.disabled = false;
@@ -1078,28 +535,16 @@
                 if (isRegistered) {
                     const regDate = new Date(registrationTime * 1000).toLocaleString();
                     statusDiv.innerHTML = `
-                        <div class="info-box">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                <span class="badge badge-success">Registered</span>
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-dim); margin-bottom: 0.5rem;">
-                                <strong style="color: var(--color-text);">Registration Time:</strong> ${regDate}
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-dim);">
-                                <strong style="color: var(--color-text);">Voting Status:</strong>
-                                <span class="badge ${hasVoted ? 'badge-info' : 'badge-warning'}">${hasVoted ? 'Voted' : 'Not Voted'}</span>
-                            </div>
+                        <div class="success-message">
+                            ✅ Registered Resident<br>
+                            Registration Time: ${regDate}<br>
+                            Current Proposal Vote Status: ${hasVoted ? 'Voted' : 'Not Voted'}
                         </div>
                     `;
                 } else {
                     statusDiv.innerHTML = `
-                        <div class="info-box" style="background: var(--error-soft); border-color: rgba(239, 83, 80, 0.28);">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="badge badge-error">Not Registered</span>
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-dim); margin-top: 0.5rem;">
-                                Please register as a resident first to participate in voting.
-                            </div>
+                        <div class="error-message">
+                            ❌ Not registered yet. Please register as a resident first.
                         </div>
                     `;
                 }
@@ -1114,78 +559,26 @@
             const description = document.getElementById('proposalDescription').value;
             const duration = document.getElementById('votingDuration').value;
 
-            console.log('=== Creating Proposal ===');
-            console.log('Title:', title);
-            console.log('Description:', description);
-            console.log('Duration:', duration, 'hours');
-
             if (!title || !description) {
-                showToast('Please fill in proposal title and description', 'warning');
-                return;
-            }
-
-            if (!contract) {
-                showToast('Please connect your wallet first', 'error');
+                showError('Please fill in proposal title and description');
                 return;
             }
 
             if (!isCorrectNetwork) {
-                showToast('Please switch to ' + NETWORK_CONFIG.NAME, 'warning');
+                showError('Please switch to Sepolia Testnet');
                 return;
             }
 
             try {
                 const btn = document.getElementById('createProposal');
                 btn.disabled = true;
-                btn.innerHTML = 'Creating... <div class="loading"></div>';
+                btn.innerHTML = 'Creating...<div class="loading"></div>';
 
-                // Check if there's already an active proposal
-                console.log('Checking for active proposals...');
-
-                // Get fresh proposal info
-                const [freshProposalId, freshTitle, , freshIsActive] = await contract.getCurrentProposalInfo();
-                const freshPropId = Number(freshProposalId.toString());
-
-                console.log('Fresh Proposal ID:', freshPropId);
-                console.log('Fresh Is Active (from contract):', freshIsActive);
-
-                if (freshPropId > 0) {
-                    // Use isVotingActive to check if voting period is truly active
-                    const isActiveVoting = await contract.isVotingActive(freshPropId);
-                    console.log('Is Voting Active (real-time check):', isActiveVoting);
-
-                    // Check if proposal is still active (either voting or not ended)
-                    // Can only create new proposal if:
-                    // 1. Voting period has ended (isActiveVoting = false)
-                    // 2. AND proposal has been formally ended (freshIsActive = false)
-
-                    if (freshIsActive) {
-                        // Proposal is still marked as active in contract
-                        console.log('Blocking proposal creation: previous proposal still active in contract');
-
-                        let message = 'Cannot create proposal: ';
-                        if (isActiveVoting) {
-                            message += `Proposal "${freshTitle}" is still in voting period. Please wait for voting to end.`;
-                        } else {
-                            message += `Previous proposal "${freshTitle}" needs to be ended first. Click "🛑 End Expired Proposal" button.`;
-                        }
-
-                        showToast(message, 'error');
-                        btn.disabled = false;
-                        btn.innerHTML = 'Create New Proposal';
-                        return;
-                    }
-
-                    console.log('✓ Previous proposal has ended, can create new one');
-                }
-
-                console.log('Submitting createProposal transaction...');
                 const tx = await contract.createProposal(title, description, parseInt(duration));
-                console.log('Transaction hash:', tx.hash);
-                showToast('Transaction submitted. Waiting for confirmation...', 'info');
+                showSuccess('Transaction submitted. Waiting for confirmation...');
 
                 await tx.wait();
-                showToast('Proposal created successfully!', 'success');
+                showSuccess('Proposal created successfully!');
                 await loadCurrentProposal();
 
                 // Clear form
@@ -1194,18 +587,7 @@
 
             } catch (error) {
                 console.error('Proposal creation failed:', error);
-
-                // Provide user-friendly error messages
-                let errorMessage = error.reason || error.message;
-                if (errorMessage.includes('Previous proposal still active')) {
-                    errorMessage = 'Cannot create proposal: A previous proposal is still active. Please wait for it to end before creating a new one.';
-                } else if (errorMessage.includes('Only property manager')) {
-                    errorMessage = 'Only the property manager can create proposals.';
-                } else if (errorMessage.includes('Only registered residents')) {
-                    errorMessage = 'You must be a registered resident to create proposals.';
-                }
-
-                showToast(errorMessage, 'error');
+                showError('Proposal creation failed: ' + (error.reason || error.message));
             } finally {
                 const btn = document.getElementById('createProposal');
                 btn.disabled = false;
@@ -1219,149 +601,38 @@
 
             try {
                 const [proposalId, title, description, isActive, startTime, endTime, totalVotes] = await contract.getCurrentProposalInfo();
-                currentProposalId = Number(proposalId.toString());
-
-                console.log('=== Loading Proposal ===');
-                console.log('Proposal ID:', currentProposalId);
-                console.log('Is Active (from contract):', isActive);
+                currentProposalId = proposalId.toNumber();
 
                 const proposalDisplay = document.getElementById('proposalDisplay');
 
-                // Double check with isVotingActive for accurate status
-                let isVotingActive = false;
-                if (currentProposalId > 0) {
-                    isVotingActive = await contract.isVotingActive(currentProposalId);
-                    console.log('Is Voting Active (real-time check):', isVotingActive);
-                    console.log('Title:', title);
-                    console.log('Start Time:', startTime.toString());
-                    console.log('End Time:', endTime.toString());
-                }
-
-                // Show proposal if it exists and is active (either still voting or ended but not processed)
-                if (currentProposalId > 0 && (isActive || isVotingActive)) {
-                    const startDate = new Date(startTime * 1000).toLocaleString();
-                    const endDate = new Date(endTime * 1000).toLocaleString();
-
-                    // Check if voting is still active or has ended
-                    if (isVotingActive) {
-                        // Voting period is still active
-                        proposalDisplay.innerHTML = `
-                            <div class="proposal-info">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
-                                    <h3>${title}</h3>
-                                    <span class="badge badge-success">Active</span>
-                                </div>
-                                <p style="margin-bottom: var(--space-3);"><strong>Description:</strong></p>
-                                <p style="margin-bottom: var(--space-4);">${description}</p>
-                                <div class="proposal-meta">
-                                    <div class="proposal-meta-item">
-                                        <strong>Start Time</strong>
-                                        ${startDate}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>End Time</strong>
-                                        ${endDate}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>Total Votes</strong>
-                                        ${totalVotes}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>Proposal ID</strong>
-                                        #${currentProposalId}
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="votingTimer" class="timer"></div>
-                            <div class="voting-section">
-                                <button class="btn vote-btn vote-yes" onclick="submitVote(1)">YES</button>
-                                <button class="btn vote-btn vote-no" onclick="submitVote(0)">NO</button>
-                            </div>
-                        `;
-                        await updateVotingTimer();
-                    } else {
-                        // Voting period ended but proposal still active (needs admin to end it)
-                        proposalDisplay.innerHTML = `
-                            <div class="proposal-info">
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
-                                    <h3>${title}</h3>
-                                    <span class="badge badge-warning">Awaiting Closure</span>
-                                </div>
-                                <p style="margin-bottom: var(--space-3);"><strong>Description:</strong></p>
-                                <p style="margin-bottom: var(--space-4);">${description}</p>
-                                <div class="proposal-meta">
-                                    <div class="proposal-meta-item">
-                                        <strong>Start Time</strong>
-                                        ${startDate}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>End Time</strong>
-                                        ${endDate}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>Total Votes</strong>
-                                        ${totalVotes}
-                                    </div>
-                                    <div class="proposal-meta-item">
-                                        <strong>Proposal ID</strong>
-                                        #${currentProposalId}
-                                    </div>
-                                </div>
-                                <div class="timer" style="background: var(--warning-soft); border-color: rgba(243, 177, 59, 0.28); color: var(--warning);">
-                                    ⏰ Voting Period Ended - Awaiting Admin Closure
-                                </div>
-                                <div style="text-align: center; padding: var(--space-4); background: var(--info-soft); border-radius: var(--radius-md); margin-top: var(--space-3); border: 1px solid rgba(59, 130, 246, 0.28);">
-                                    <p style="color: var(--info); font-weight: 600; margin-bottom: var(--space-2);">📢 Admin Action Required</p>
-                                    <p style="color: var(--color-text-dim); font-size: 0.9rem;">
-                                        This proposal's voting period has ended. Admin must click "🛑 End Expired Proposal" to reveal results and allow new proposals.
-                                    </p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                } else if (currentProposalId > 0 && !isActive && !isVotingActive) {
-                    // Proposal exists but has been ended (not active and voting period over)
+                if (isActive && currentProposalId > 0) {
                     const startDate = new Date(startTime * 1000).toLocaleString();
                     const endDate = new Date(endTime * 1000).toLocaleString();
 
                     proposalDisplay.innerHTML = `
-                        <div class="proposal-info" style="opacity: 0.7;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
-                                <h3>${title}</h3>
-                                <span class="badge badge-error">Voting Ended</span>
-                            </div>
-                            <p style="margin-bottom: var(--space-3);"><strong>Description:</strong></p>
-                            <p style="margin-bottom: var(--space-4);">${description}</p>
-                            <div class="proposal-meta">
-                                <div class="proposal-meta-item">
-                                    <strong>Start Time</strong>
-                                    ${startDate}
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <strong>End Time</strong>
-                                    ${endDate}
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <strong>Total Votes</strong>
-                                    ${totalVotes}
-                                </div>
-                                <div class="proposal-meta-item">
-                                    <strong>Proposal ID</strong>
-                                    #${currentProposalId}
-                                </div>
-                            </div>
-                            <div class="timer" style="background: var(--error-soft); border-color: rgba(239, 83, 80, 0.28); color: var(--error);">
-                                Voting Period Ended
-                            </div>
-                            <div style="text-align: center; padding: var(--space-4); color: var(--color-text-dim); font-size: 0.9rem;">
-                                This proposal has ended. Admin can create a new proposal now.
+                        <div class="proposal-info">
+                            <h3>📋 ${title}</h3>
+                            <p style="margin-bottom: 10px;"><strong>Description:</strong></p>
+                            <p style="margin-bottom: 15px;">${description}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; color: #666;">
+                                <div><strong>Start Time:</strong> ${startDate}</div>
+                                <div><strong>End Time:</strong> ${endDate}</div>
+                                <div><strong>Total Votes:</strong> ${totalVotes}</div>
+                                <div><strong>Proposal ID:</strong> #${currentProposalId}</div>
                             </div>
                         </div>
+                        <div id="votingTimer" class="timer"></div>
+                        <div class="voting-section">
+                            <button class="btn vote-btn vote-yes" onclick="submitVote(1)">✅ YES</button>
+                            <button class="btn vote-btn vote-no" onclick="submitVote(0)">❌ NO</button>
+                        </div>
                     `;
+
+                    await updateVotingTimer();
                 } else {
                     proposalDisplay.innerHTML = `
-                        <div class="empty-state">
-                            No active voting currently
+                        <div id="noProposal" style="text-align: center; color: #718096; padding: 40px 0;">
+                            <p>📋 No active voting currently</p>
                         </div>
                     `;
                 }
@@ -1376,77 +647,48 @@
 
         // Submit vote function
         async function submitVote(voteChoice) {
-            console.log('=== Submitting Vote ===');
-            console.log('Vote Choice:', voteChoice === 1 ? 'YES' : 'NO');
-            console.log('Proposal ID:', currentProposalId);
-
             if (!contract || !userAddress) {
-                showToast('Please connect your wallet first', 'warning');
+                showError('Please connect your wallet first');
                 return;
             }
 
             if (!isCorrectNetwork) {
-                showToast('Please switch to ' + NETWORK_CONFIG.NAME, 'warning');
-                return;
-            }
-
-            if (currentProposalId === 0) {
-                showToast('No active proposal to vote on', 'warning');
+                showError('Please switch to Sepolia Testnet');
                 return;
             }
 
             try {
-                // Check if voting is still active
-                console.log('Checking if voting is active...');
-                const isActive = await contract.isVotingActive(currentProposalId);
-                console.log('Is Voting Active:', isActive);
-
-                if (!isActive) {
-                    showToast('Voting period has ended for this proposal', 'error');
-                    return;
-                }
-
                 // Check if registered
-                console.log('Checking registration status...');
                 const [isRegistered] = await contract.getResidentStatus(userAddress);
-                console.log('Is Registered:', isRegistered);
-
                 if (!isRegistered) {
-                    showToast('Please register as a resident first', 'warning');
+                    showError('Please register as a resident first');
                     return;
                 }
 
                 // Check if already voted
                 const [, , hasVoted] = await contract.getResidentStatus(userAddress);
-                console.log('Has Voted:', hasVoted);
-
                 if (hasVoted) {
-                    showToast('You have already voted on this proposal', 'warning');
+                    showError('You have already voted on this proposal');
                     return;
                 }
 
                 const voteText = voteChoice === 1 ? 'YES' : 'NO';
                 const confirmVote = confirm(`Confirm your vote: ${voteText}?\n\nNote: Vote cannot be changed once submitted!`);
 
-                if (!confirmVote) {
-                    console.log('Vote cancelled by user');
-                    return;
-                }
+                if (!confirmVote) return;
 
-                console.log('Submitting vote transaction...');
                 const tx = await contract.submitVote(currentProposalId, voteChoice);
-                console.log('Transaction hash:', tx.hash);
-                showToast('Vote submitted. Waiting for confirmation...', 'info');
+                showSuccess('Vote submitted. Waiting for confirmation...');
 
                 await tx.wait();
-                showToast('Vote submitted successfully!', 'success');
+                showSuccess('Vote submitted successfully!');
 
                 await loadCurrentProposal();
                 await checkResidentStatus();
 
             } catch (error) {
                 console.error('Vote submission failed:', error);
-                showToast('Vote submission failed: ' + (error.reason || error.message), 'error');
+                showError('Vote submission failed: ' + (error.reason || error.message));
             }
         }
 
@@ -1463,9 +705,9 @@
                     const minutes = Math.floor((timeLeft % 3600) / 60);
                     const seconds = timeLeft % 60;
 
-                    timerElement.innerHTML = `Time Remaining: ${hours}h ${minutes}m ${seconds}s`;
+                    timerElement.innerHTML = `⏰ Time Remaining: ${hours}h ${minutes}m ${seconds}s`;
                 } else if (timerElement) {
-                    timerElement.innerHTML = `Voting Period Ended`;
+                    timerElement.innerHTML = `⏰ Voting Period Ended`;
 
                     // Disable voting buttons
                     const voteBtns = document.querySelectorAll('.vote-btn');
@@ -1493,11 +735,10 @@
 
                     resultsSection.innerHTML = `
                         <div class="results-display">
-                            <h4>Voting Results - <span class="${approved ? 'approved' : 'rejected'}">${approved ? 'APPROVED' : 'REJECTED'}</span></h4>
-
-                            <div class="result-item">
-                                <div class="result-header">
-                                    <span><strong>YES Votes</strong></span>
+                            <h4>📊 Voting Results - ${approved ? '✅ APPROVED' : '❌ REJECTED'}</h4>
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span><strong>✅ YES Votes</strong></span>
                                     <span>${yesVotes} votes (${yesPercentage}%)</span>
                                 </div>
                                 <div class="result-bar">
@@ -1506,10 +747,9 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="result-item">
-                                <div class="result-header">
-                                    <span><strong>NO Votes</strong></span>
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span><strong>❌ NO Votes</strong></span>
                                     <span>${noVotes} votes (${noPercentage}%)</span>
                                 </div>
                                 <div class="result-bar">
@@ -1518,20 +758,19 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="result-summary">
+                            <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
                                 <p><strong>Total Votes:</strong> ${totalVotes}</p>
-                                <p class="result-verdict ${approved ? 'approved' : 'rejected'}">
-                                    ${approved ? 'Proposal APPROVED' : 'Proposal REJECTED'}
+                                <p style="margin-top: 5px; color: ${approved ? '#38a169' : '#e53e3e'}; font-weight: bold;">
+                                    Result: ${approved ? 'Proposal APPROVED 🎉' : 'Proposal REJECTED 😔'}
                                 </p>
                             </div>
                         </div>
                     `;
                 } else {
                     resultsSection.innerHTML = `
-                        <div class="empty-state">
+                        <p style="text-align: center; color: #718096; padding: 20px 0;">
                             ${currentProposalId > 0 ? 'Voting in progress, results not yet revealed' : 'No voting results available'}
-                        </div>
+                        </p>
                     `;
                 }
             } catch (error) {
@@ -1539,206 +778,39 @@
             }
         }
 
-        // End expired proposal (Admin only)
-        async function endExpiredProposal() {
-            if (!contract || !userAddress) {
-                showToast('Please connect your wallet first', 'error');
-                return;
-            }
-
-            if (!isCorrectNetwork) {
-                showToast('Please switch to ' + NETWORK_CONFIG.NAME, 'warning');
-                return;
-            }
-
-            try {
-                console.log('=== Ending Expired Proposal ===');
-
-                // Get current proposal
-                const [proposalId, title, , isActive] = await contract.getCurrentProposalInfo();
-                const propId = Number(proposalId.toString());
-
-                console.log('Current Proposal ID:', propId);
-                console.log('Is Active (from contract):', isActive);
-
-                if (propId === 0) {
-                    showToast('No proposal to end', 'warning');
-                    return;
+        // Utility functions for messages
+        function showError(message) {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.error-message, .success-message');
+            existingMessages.forEach(msg => {
+                if (!msg.closest('#residentStatus')) {
+                    msg.remove();
                 }
+            });
 
-                // Check if voting is still active
-                const isVotingActive = await contract.isVotingActive(propId);
-                console.log('Is Voting Active:', isVotingActive);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.main-content'));
 
-                if (isVotingActive) {
-                    const confirmEnd = confirm(`Proposal "${title}" is still active.\n\nAre you sure you want to end it now?\n\nThis will reveal the voting results.`);
-                    if (!confirmEnd) {
-                        console.log('End proposal cancelled by user');
-                        return;
-                    }
-                } else {
-                    const confirmEnd = confirm(`End expired proposal "${title}"?\n\nProposal ID: ${propId}\nThis will reveal the voting results and allow creating new proposals.`);
-                    if (!confirmEnd) {
-                        console.log('End proposal cancelled by user');
-                        return;
-                    }
-                }
-
-                const btn = document.getElementById('endProposal');
-                btn.disabled = true;
-                btn.innerHTML = 'Ending... <div class="loading"></div>';
-
-                console.log('Calling endProposal() for Proposal ID:', propId);
-                const tx = await contract.endProposal(propId);
-                console.log('Transaction hash:', tx.hash);
-
-                showToast('Transaction submitted. Waiting for confirmation...', 'info');
-
-                await tx.wait();
-                console.log('Proposal ended successfully');
-                showToast('Proposal ended successfully! You can now create a new proposal.', 'success');
-
-                // Reload proposal data
-                await loadCurrentProposal();
-                await loadResults();
-
-            } catch (error) {
-                console.error('Failed to end proposal:', error);
-
-                let errorMessage = error.reason || error.message;
-                if (errorMessage.includes('Only property manager')) {
-                    errorMessage = 'Only the property manager (admin) can end proposals.';
-                } else if (errorMessage.includes('No active proposal')) {
-                    errorMessage = 'No active proposal to end.';
-                } else if (errorMessage.includes('Voting still active')) {
-                    errorMessage = 'Voting period has not ended yet.';
-                }
-
-                showToast('Failed to end proposal: ' + errorMessage, 'error');
-            } finally {
-                const btn = document.getElementById('endProposal');
-                btn.disabled = false;
-                btn.innerHTML = '🛑 End Expired Proposal';
-            }
+            setTimeout(() => errorDiv.remove(), 5000);
         }
 
-        // Force refresh contract state
-        async function forceRefresh() {
-            if (!contract) {
-                showToast('Please connect wallet first', 'warning');
-                return;
-            }
-
-            try {
-                console.log('=== Force Refreshing Contract State ===');
-                showToast('Refreshing contract state...', 'info');
-
-                // Reload all data
-                await loadCurrentProposal();
-                await checkResidentStatus();
-
-                console.log('✓ State refreshed');
-                showToast('Contract state refreshed successfully!', 'success');
-            } catch (error) {
-                console.error('Failed to refresh:', error);
-                showToast('Failed to refresh: ' + error.message, 'error');
-            }
-        }
-
-        // Debug contract state
-        async function debugContractState() {
-            if (!contract) {
-                alert('Please connect wallet first!');
-                return;
-            }
-
-            console.log('\n\n=== 🔍 DEBUG CONTRACT STATE ===\n');
-
-            try {
-                // Get current proposal info
-                const [proposalId, title, description, isActive, startTime, endTime, totalVotes] = await contract.getCurrentProposalInfo();
-                console.log('📋 Current Proposal Info:');
-                console.log('  Proposal ID:', proposalId.toString());
-                console.log('  Title:', title);
-                console.log('  Description:', description);
-                console.log('  Is Active (from contract):', isActive);
-                console.log('  Start Time:', new Date(startTime * 1000).toLocaleString());
-                console.log('  End Time:', new Date(endTime * 1000).toLocaleString());
-                console.log('  Total Votes:', totalVotes.toString());
-
-                const propId = Number(proposalId.toString());
-
-                if (propId > 0) {
-                    // Check if voting is active
-                    const isVotingActive = await contract.isVotingActive(propId);
-                    console.log('\n⏰ Real-time Status:');
-                    console.log('  Is Voting Active:', isVotingActive);
-                    console.log('  Current Time:', new Date().toLocaleString());
-
-                    // Get voting time left
-                    const timeLeft = await contract.getVotingTimeLeft(propId);
-                    console.log('  Time Left (seconds):', timeLeft.toString());
-                    const hours = Math.floor(timeLeft / 3600);
-                    const minutes = Math.floor((timeLeft % 3600) / 60);
-                    const seconds = timeLeft % 60;
-                    console.log('  Time Left (formatted):', `${hours}h ${minutes}m ${seconds}s`);
+        function showSuccess(message) {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.error-message, .success-message');
+            existingMessages.forEach(msg => {
+                if (!msg.closest('#residentStatus')) {
+                    msg.remove();
                 }
+            });
 
-                // Get user status
-                if (userAddress) {
-                    const [isRegistered, registrationTime, hasVoted] = await contract.getResidentStatus(userAddress);
-                    console.log('\n👤 User Status:');
-                    console.log('  Address:', userAddress);
-                    console.log('  Is Registered:', isRegistered);
-                    console.log('  Registration Time:', new Date(registrationTime * 1000).toLocaleString());
-                    console.log('  Has Voted:', hasVoted);
-                }
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.main-content'));
 
-                // Get total residents
-                const totalResidents = await contract.getTotalResidents();
-                console.log('\n🏘️ Community Stats:');
-                console.log('  Total Registered Residents:', totalResidents.toString());
-
-                // Get proposal results if available
-                if (propId > 0) {
-                    try {
-                        const [resultsRevealed, total, yes, no, approved] = await contract.getProposalResults(propId);
-                        console.log('\n📊 Proposal Results:');
-                        console.log('  Results Revealed:', resultsRevealed);
-                        console.log('  Total Votes:', total.toString());
-                        console.log('  Yes Votes:', yes.toString());
-                        console.log('  No Votes:', no.toString());
-                        console.log('  Approved:', approved);
-                    } catch (e) {
-                        console.log('\n📊 Proposal Results: Not yet available');
-                    }
-                }
-
-                console.log('\n=== 🔍 DEBUG END ===\n\n');
-
-                showToast('Debug info logged to console. Press F12 to view.', 'info');
-
-            } catch (error) {
-                console.error('❌ Debug Error:', error);
-                showToast('Debug failed: ' + error.message, 'error');
-            }
-        }
-
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            // Remove existing toasts
-            const existingToasts = document.querySelectorAll('.toast');
-            existingToasts.forEach(toast => toast.remove());
-
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
+            setTimeout(() => successDiv.remove(), 5000);
         }
 
         // Event listeners
