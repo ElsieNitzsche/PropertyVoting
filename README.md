@@ -13,7 +13,7 @@
 
 A revolutionary blockchain voting system using **Zama's FHEVM** to ensure complete privacy and anonymity in property management decisions. Built for the **Zama FHE ecosystem** on Sepolia testnet.
 
-**[🌐 Live Demo](https://anonymous-property-voting.vercel.app)** | **[📺 Video Demo](#)** | **[📖 Docs](./docs/)** | **[🚀 Quick Start](#-quick-start)**
+**[🌐 Live Demo](https://property-voting.vercel.app/)** | **[📺 Video Demo demo.mp4]** | **[📖 Docs](https://github.com/ElsieNitzsche/PropertyVoting)** | **[🚀 Quick Start](#-quick-start)**
 
 ---
 
@@ -120,7 +120,7 @@ npm --version   # 9.x or 10.x
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-org/anonymous-voting-system.git
+git clone https://github.com/ElsieNitzsche/PropertyVoting.git
 cd anonymous-voting-system
 
 # 2. Install dependencies
@@ -140,7 +140,7 @@ npm test
 PORT=1251 npx http-server public -p 1251 -c-1 --cors
 ```
 
-**Visit**: http://localhost:1251
+
 
 ---
 
@@ -263,9 +263,9 @@ npm run interact
 ### Contract Addresses
 
 **Sepolia Testnet**
-- **Main Contract**: `0x6Ece9C29F6E47876bC3809BAC99c175273E184aB`
+- **Main Contract**: `0xD30412C56d2E50dE333512Bd91664d98475E8eFf`
 - **Network**: Sepolia (Chain ID: 11155111)
-- **Explorer**: [View on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x6Ece9C29F6E47876bC3809BAC99c175273E184aB)
+- **Explorer**: [View on Sepolia Etherscan](https://sepolia.etherscan.io/address/0xD30412C56d2E50dE333512Bd91664d98475E8eFf)
 
 ---
 
