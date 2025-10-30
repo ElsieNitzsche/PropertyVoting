@@ -31,6 +31,12 @@ A revolutionary blockchain voting system using **Zama's FHEVM** to ensure comple
 - Deadline-based proposal management
 - Secure result revelation
 
+🎨 **Multiple Frontend Implementations**
+- **Vanilla JS + Vite**: Production-ready main application
+- **React + TypeScript**: Modern component-based architecture
+- **FHEVM Universal SDK**: Simplified FHE encryption API
+- Dual examples for different development preferences
+
 🛡️ **Security Hardened**
 - DoS protection with rate limiting (100 actions/hour)
 - Multi-layer security scanning
@@ -48,6 +54,7 @@ A revolutionary blockchain voting system using **Zama's FHEVM** to ensure comple
 - 92%+ code coverage
 - TypeScript support
 - Complete CI/CD pipeline
+- SDK integration examples
 
 ---
 
@@ -101,6 +108,52 @@ User → MetaMask → fhEVM Encrypt → Smart Contract
 
 ---
 
+## 📁 Project Examples
+
+This repository includes multiple implementation examples demonstrating different frontend approaches:
+
+### 🎯 Main Application (Vite + Vanilla JS)
+**Location**: `/public`
+
+The primary implementation using Vite and vanilla JavaScript:
+- **Technology**: Vite v5.0.10 + Vanilla JavaScript + Tailwind CSS
+- **Features**: Full-featured voting system with glassmorphism UI
+- **Best For**: Lightweight applications, maximum performance
+- **Start**: `PORT=1251 npx http-server public -p 1251 -c-1 --cors`
+- **Live Demo**: [View Demo](https://property-voting.vercel.app/)
+
+### ⚛️ React + TypeScript Example
+**Location**: `/property-voting`
+
+Modern React implementation showcasing FHEVM Universal SDK integration:
+- **Technology**: React 18.2 + TypeScript 5.3 + Parcel bundler
+- **SDK Integration**: Uses `@fhevm/universal-sdk` for simplified FHE operations
+- **Components**:
+  - `VotingApp` - Main application container
+  - `WalletConnection` - Wallet connection UI
+  - `ResidentRegistration` - Encrypted registration form
+  - `AdminPanel` - Proposal creation interface
+  - `VoteSubmission` - Voting interface with timer
+  - `ResultsDisplay` - Results visualization
+- **Best For**: Type-safe applications, SDK integration examples
+- **Start**: `cd property-voting && npm run dev` (Port 3001)
+- **Documentation**: See [`property-voting/SDK_INTEGRATION.md`](./property-voting/SDK_INTEGRATION.md)
+
+### 🔍 Key Differences
+
+| Feature | Main App | React Example |
+|---------|----------|---------------|
+| **Framework** | Vanilla JS | React + TypeScript |
+| **Bundler** | Vite | Parcel |
+| **FHE Library** | fhevmjs (direct) | @fhevm/universal-sdk |
+| **Ethers.js** | v5.7.2 | v6.10.0 |
+| **Port** | 1251 | 3001 |
+| **Best Use** | Production deployment | SDK integration reference |
+
+Both examples share the same smart contract (`AnonymousPropertyVoting.sol`) and demonstrate different frontend approaches to building privacy-preserving dApps.
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -117,6 +170,8 @@ npm --version   # 9.x or 10.x
 ```
 
 ### Installation
+
+#### Main Application Setup
 
 ```bash
 # 1. Clone repository
@@ -136,9 +191,34 @@ npm run compile
 # 5. Run tests
 npm test
 
-# 6. Start local server
+# 6. Start main application (Vite + Vanilla JS)
 PORT=1251 npx http-server public -p 1251 -c-1 --cors
 ```
+
+#### React Example Setup
+
+```bash
+# From project root
+cd property-voting
+
+# Install dependencies
+npm install
+
+# Start React development server
+npm run dev
+
+# Or build for production
+npm run build
+
+# Application runs on http://localhost:3001
+```
+
+**React Example Features:**
+- ✅ Component-based architecture
+- ✅ TypeScript type safety
+- ✅ FHEVM Universal SDK integration
+- ✅ Hot module replacement (HMR)
+- ✅ Production-ready build process
 
 
 
@@ -182,6 +262,8 @@ contract AnonymousPropertyVoting {
 
 ### Frontend Integration
 
+#### Vanilla JavaScript (fhevmjs)
+
 ```javascript
 // Initialize fhEVM
 import { initFhevm, createInstance } from "fhevmjs";
@@ -203,6 +285,33 @@ const encryptedData = handles.encrypt();
 // Submit vote
 await contract.vote(proposalId, encryptedData.handles[0], encryptedData.inputProof);
 ```
+
+#### React + FHEVM Universal SDK
+
+```typescript
+// Import SDK integration module
+import { initFHEVM, encryptVote } from './fhevm-integration';
+import { formatVoteChoice, waitForTransaction } from './utils';
+
+// Initialize FHEVM client
+await initFHEVM();
+
+// Encrypt vote with one line
+const encryptedVote = await encryptVote(1); // 1=Yes, 0=No
+
+// Submit vote with type safety
+const tx = await contract.vote(proposalId, encryptedVote);
+await waitForTransaction(tx);
+
+console.log(`${formatVoteChoice(1)} vote submitted successfully!`);
+```
+
+**SDK Benefits:**
+- ✅ Simplified API (one-line encryption)
+- ✅ Built-in validation and error handling
+- ✅ Type-safe utility functions
+- ✅ Standardized formatting helpers
+- ✅ Retry logic and transaction helpers
 
 ### FHE Operations
 
@@ -375,12 +484,25 @@ cat gas-report.txt
 - **Hardhat** v2.19.0
 - **TypeChain** (type generation)
 
-### Frontend
+### Frontend Technologies
+
+#### Main Application (Vite + Vanilla JS)
 - **Vite** v5.0.10
 - **Vanilla JavaScript**
 - **Ethers.js** v5.7.2
 - **fhevmjs** (FHE encryption)
 - **Tailwind CSS**
+
+#### React Example (`property-voting/`)
+- **React** v18.2.0 + **TypeScript** v5.3.3
+- **React DOM** v18.2.0
+- **Parcel** v2.11.0 (bundler)
+- **Ethers.js** v6.10.0
+- **@fhevm/universal-sdk** (FHEVM Universal SDK)
+  - Simplified FHE encryption API
+  - Built-in validation and error handling
+  - Type-safe utility functions
+  - Standardized formatting helpers
 
 ### Quality & Security
 - **ESLint** v8.56.0 + Security Plugin
@@ -409,6 +531,13 @@ cat gas-report.txt
 - [📘 Project Summary](./PROJECT_SUMMARY.md) - Technical overview
 - [🔄 Migration Guide](./MIGRATION_GUIDE.md) - fhEVM v0.6.0
 
+### React Example Documentation
+- [⚛️ SDK Integration Guide](./property-voting/SDK_INTEGRATION.md) - FHEVM Universal SDK usage
+- [📋 README](./property-voting/README.md) - React example overview
+- [🔄 Migration Notes](./property-voting/MIGRATION.md) - Static to React conversion
+- [📖 SDK Usage Examples](./property-voting/README_SDK_USAGE.md) - Code examples
+- [📊 Conversion Summary](./property-voting/CONVERSION_SUMMARY.md) - Technical details
+
 ### Development
 - [🔧 Development Workflow](./DEVELOPMENT_WORKFLOW.md) - TypeScript + Security
 - [🧪 Testing Guide](./TESTING.md) - Test strategy (70 tests)
@@ -430,7 +559,7 @@ cat gas-report.txt
 - [📝 Security & Performance](./SECURITY_PERFORMANCE_SUMMARY.md) - Implementation
 - [🎉 Project Complete](./PROJECT_COMPLETE.md) - Full overview
 
-**Total**: 17 comprehensive documentation files
+**Total**: 22 comprehensive documentation files (17 main + 5 React example)
 
 ---
 
@@ -598,21 +727,33 @@ This project demonstrates practical privacy-preserving applications using **Zama
 **Achievements:**
 - ✅ Production-ready FHE implementation
 - ✅ Real-world use case (property voting)
+- ✅ Multiple frontend implementations (Vanilla JS + React)
+- ✅ FHEVM Universal SDK integration showcase
 - ✅ 70 comprehensive tests
-- ✅ 17 documentation guides
+- ✅ 22 documentation guides
 - ✅ Multi-layer security
 - ✅ 4-7% gas optimization
+- ✅ Type-safe development with TypeScript
 
 ---
 
 ## 🔗 Links
 
+### Live Demos
+- **Main Application (Vite)**: [https://property-voting.vercel.app/](https://property-voting.vercel.app/)
+- **React Example**: [https://anonymous-property-voting-4ars.vercel.app/](https://anonymous-property-voting-4ars.vercel.app/)
+- **GitHub Repository**: [https://github.com/ElsieNitzsche/AnonymousPropertyVoting](https://github.com/ElsieNitzsche/AnonymousPropertyVoting)
+
 ### Documentation
 - **Zama FHE**: https://docs.zama.ai/fhevm
+- **FHEVM Universal SDK**: https://docs.zama.ai/fhevm/sdk
 - **fhEVM Whitepaper**: https://github.com/zama-ai/fhevm/blob/main/fhevm-whitepaper.pdf
 - **Hardhat**: https://hardhat.org/docs
-- **Ethers.js**: https://docs.ethers.org/v5/
+- **Ethers.js v5**: https://docs.ethers.org/v5/
+- **Ethers.js v6**: https://docs.ethers.org/v6/
 - **Solidity**: https://docs.soliditylang.org/
+- **React**: https://react.dev/
+- **TypeScript**: https://www.typescriptlang.org/docs/
 
 ### Networks
 - **Sepolia Explorer**: https://sepolia.etherscan.io
@@ -643,14 +784,19 @@ MIT License - see [LICENSE](./LICENSE) file.
 
 **Built With:**
 - [Zama fhEVM](https://www.zama.ai/) - Fully Homomorphic Encryption
+- [FHEVM Universal SDK](https://docs.zama.ai/fhevm/sdk) - FHE encryption SDK
 - [Hardhat](https://hardhat.org/) - Development framework
-- [Ethers.js](https://docs.ethers.org/) - Ethereum library
+- [Ethers.js](https://docs.ethers.org/) - Ethereum library (v5 & v6)
+- [React](https://react.dev/) - UI framework
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Vite](https://vitejs.dev/) - Build system
+- [Parcel](https://parceljs.org/) - React bundler
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 
 **Special Thanks:**
-- Zama team for FHE technology
+- Zama team for FHE technology and Universal SDK
 - Ethereum community
+- React and TypeScript communities
 - All contributors
 
 ---
@@ -659,16 +805,18 @@ MIT License - see [LICENSE](./LICENSE) file.
 
 **Version**: 2.0.0
 **Status**: ✅ **PRODUCTION READY**
-**Last Updated**: October 18, 2025
+**Last Updated**: November 3, 2025
 **Network**: Sepolia Testnet
 
 ### Stats
 - 🔐 Privacy: FHE-powered
+- 🎨 Frontends: 2 implementations (Vanilla JS + React)
 - 🧪 Tests: 70 passing
 - 📊 Coverage: 92%+
 - ⛽ Gas: 4-7% optimized
 - 🛠️ Toolchain: Complete
-- 📚 Docs: 17 guides
+- 📚 Docs: 22 guides
+- ⚛️ SDK: Universal SDK integrated
 
 ---
 
