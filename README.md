@@ -742,7 +742,7 @@ This project demonstrates practical privacy-preserving applications using **Zama
 ### Live Demos
 - **Main Application (Vite)**: [https://property-voting.vercel.app/](https://property-voting.vercel.app/)
 - **React Example**: [https://anonymous-property-voting-4ars.vercel.app/](https://anonymous-property-voting-4ars.vercel.app/)
-- **GitHub Repository**: [https://github.com/ElsieNitzsche/AnonymousPropertyVoting](https://github.com/ElsieNitzsche/AnonymousPropertyVoting)
+
 
 ### Documentation
 - **Zama FHE**: https://docs.zama.ai/fhevm
