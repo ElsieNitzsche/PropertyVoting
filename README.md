@@ -3,6 +3,7 @@
 A privacy-preserving property voting system built on FHEVM (Fully Homomorphic Encryption Virtual Machine) with advanced features including Gateway callback pattern, comprehensive refund mechanisms, and robust timeout protection.
 
 **Video Demo**: demo.mp4
+
 **Live Demo**: https://property-voting.vercel.app/
 
 ## Overview
